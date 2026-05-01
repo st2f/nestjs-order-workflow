@@ -67,6 +67,8 @@ RabbitMQ is available for later steps at:
 
 - AMQP: `localhost:5672`
 - Management UI: `http://localhost:15672`
+- Username: `orderflow`
+- Password: `orderflow`
 
 The backend listens on `http://localhost:3000` by default.
 

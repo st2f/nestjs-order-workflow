@@ -3,13 +3,10 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
-import { Order } from '../../orders/entities/order.entity';
 import { PaymentStatus } from '../payment-status.enum';
 
 @Entity({ name: 'payments' })
@@ -21,10 +18,6 @@ export class Payment {
   @Index()
   @Column({ name: 'order_id', type: 'uuid' })
   orderId!: string;
-
-  @ManyToOne(() => Order, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'order_id' })
-  order!: Order;
 
   @Index()
   @Column({

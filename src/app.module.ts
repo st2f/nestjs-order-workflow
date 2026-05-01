@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import './database/serialize-postgres-query-runner';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { EnrollmentsModule } from './enrollments/enrollments.module';

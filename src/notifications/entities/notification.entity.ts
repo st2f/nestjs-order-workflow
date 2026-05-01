@@ -1,12 +1,4 @@
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
-import { Order } from '../../orders/entities/order.entity';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { NotificationType } from '../notification-type.enum';
 
 @Entity({ name: 'notifications' })
@@ -17,10 +9,6 @@ export class Notification {
   @Index()
   @Column({ name: 'order_id', type: 'uuid' })
   orderId!: string;
-
-  @ManyToOne(() => Order, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'order_id' })
-  order!: Order;
 
   @Index()
   @Column({ type: 'enum', enum: NotificationType })
