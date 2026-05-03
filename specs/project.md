@@ -785,10 +785,10 @@ Notes
 7. implement compensation (`refund.requested` → `refund.succeeded`)
 8. add idempotency protection
 9. add debug endpoints
-10. add minimal frontend view
 
 During implementation at any stages:
 
 - [prepare for microservices split](/specs/services-split.md)
-- add tests progressively when it is proving something useful
+- [add tests](/specs/tests.md) progressively when it is proving something useful
+- [add minimal frontend view](/specs/ui.md)
 - when a stage is complete, update the [README](/README.md) with bare minimum such as the app current working state and potentially new commands.

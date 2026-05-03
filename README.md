@@ -5,7 +5,10 @@
 OrderFlow is a small NestJS backend for demonstrating an event-driven course
 purchase workflow.
 
-This repository currently contains the backend implementation. Frontend and deployment split-out will be added in later steps.
+This repository is split into two application directories:
+
+- `backend/` contains the NestJS API and worker-facing domain modules.
+- `frontend/` contains the minimal React debug UI.
 
 ## Step 1 — Entities and schema foundation
 
@@ -23,7 +26,7 @@ Implemented so far:
   - `notifications`
 - Enums for order, payment, enrollment, and notification statuses/types.
 - A local `docker-compose.yml` with Postgres and RabbitMQ services.
-- `.env.example` with the database settings used by the local compose stack.
+- `backend/.env.example` with the database settings used by the local compose stack.
 - A simple root endpoint returning backend status text.
 
 Not implemented yet:
@@ -35,17 +38,19 @@ Not implemented yet:
 - Debug `/ops` endpoints.
 - Frontend.
 
-## Local setup
+## Backend setup
 
 Install dependencies:
 
 ```bash
+cd backend
 npm install
 ```
 
 Create a local environment file:
 
 ```bash
+cd backend
 cp .env.example .env
 ```
 
@@ -58,6 +63,7 @@ docker compose up -d postgres rabbitmq
 Start the backend in watch mode:
 
 ```bash
+cd backend
 npm run start:dev
 ```
 
@@ -72,13 +78,38 @@ RabbitMQ is available for later steps at:
 
 The backend listens on `http://localhost:3000` by default.
 
+## Frontend setup
+
+Install dependencies:
+
+```bash
+cd frontend
+npm install
+```
+
+Start the frontend in watch mode:
+
+```bash
+cd frontend
+npm run dev
+```
+
+The frontend listens on `http://localhost:5173` by default. Vite proxies `/api`
+requests to the backend at `http://localhost:3000`, so keep the backend running
+when testing UI calls.
+
 ## Verification
 
 Run the current checks:
 
 ```bash
+cd backend
 npm run build
 npm run lint
+npm run test
+
+cd ../frontend
+npm run build
 npm run test
 ```
 
@@ -86,5 +117,6 @@ The e2e test imports the full Nest application and therefore expects the local
 database settings to be available. Start Postgres first if you run:
 
 ```bash
+cd backend
 npm run test:e2e
 ```

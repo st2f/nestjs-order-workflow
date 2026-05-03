@@ -1,0 +1,261 @@
+@import "tailwindcss";
+
+:root {
+  color: #172026;
+  background: #f4f6f2;
+  font-family: Inter, ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+button {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #c9d2cc;
+  border-radius: 8px;
+  color: #172026;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 700;
+  gap: 0.45rem;
+  min-height: 2.4rem;
+  padding: 0.55rem 0.8rem;
+}
+
+button:hover {
+  border-color: #537a5a;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+main {
+  margin: 0 auto;
+  max-width: 1180px;
+  padding: 2rem;
+}
+
+.app-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 1rem;
+}
+
+.app-header p,
+.panel-header span,
+.empty,
+time {
+  color: #5e6c64;
+}
+
+.notice {
+  background: #fff5d8;
+  border: 1px solid #e0b84f;
+  border-radius: 8px;
+  max-width: 30rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 1.5rem;
+}
+
+.primary {
+  background: #1f6f4a;
+  border-color: #1f6f4a;
+  color: #ffffff;
+}
+
+.layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.9fr);
+  margin-bottom: 1rem;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid #d7ded9;
+  border-radius: 8px;
+  min-width: 0;
+}
+
+.panel-header {
+  align-items: center;
+  border-bottom: 1px solid #e4e9e5;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+}
+
+.table {
+  display: grid;
+  overflow-x: auto;
+}
+
+.table-row {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #edf1ee;
+  border-radius: 0;
+  color: inherit;
+  display: grid;
+  font-weight: 500;
+  gap: 0.75rem;
+  grid-template-columns: minmax(8rem, 1.2fr) minmax(7rem, 1fr) minmax(8rem, 1fr);
+  min-width: 34rem;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  width: 100%;
+}
+
+.table-row span,
+.table-row strong {
+  overflow-wrap: anywhere;
+}
+
+.table-head {
+  background: #f7faf8;
+  color: #5e6c64;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.selectable {
+  cursor: pointer;
+}
+
+.selectable.selected {
+  background: #eef6f0;
+}
+
+.timeline {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+}
+
+.timeline-event {
+  border-left: 3px solid #1f6f4a;
+  padding-left: 0.75rem;
+}
+
+.timeline-event div {
+  align-items: baseline;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.timeline-event span {
+  color: #4d6758;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.timeline-event p {
+  color: #a43d3d;
+  margin-top: 0.25rem;
+}
+
+.outbox-table .table-row {
+  grid-template-columns:
+    minmax(8rem, 1fr) minmax(9rem, 1fr) minmax(7rem, 0.8fr)
+    minmax(6rem, 0.6fr) minmax(9rem, 1.2fr) minmax(8rem, 0.8fr);
+  min-width: 62rem;
+}
+
+.actions {
+  display: inline-flex;
+  gap: 0.45rem;
+}
+
+.icon-button {
+  justify-content: center;
+  padding: 0.5rem;
+  width: 2.4rem;
+}
+
+.empty {
+  padding: 1rem;
+}
+
+.modal-backdrop {
+  align-items: center;
+  background: rgba(23, 32, 38, 0.32);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1rem;
+  position: fixed;
+}
+
+dialog {
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(23, 32, 38, 0.24);
+  max-width: min(760px, 100%);
+  padding: 0;
+  width: 100%;
+}
+
+.dialog-header {
+  align-items: center;
+  border-bottom: 1px solid #e4e9e5;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+pre {
+  margin: 0;
+  max-height: 65vh;
+  overflow: auto;
+  padding: 1rem;
+}
+
+@media (max-width: 780px) {
+  main {
+    padding: 1rem;
+  }
+
+  .app-header,
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
