@@ -10,7 +10,9 @@ This repository is split into two application directories:
 - `backend/` contains the NestJS API and worker-facing domain modules.
 - `frontend/` contains the minimal React debug UI.
 
-## Step 1 — Entities and schema foundation
+## Current progress
+
+### Step 1 — Entities and schema foundation
 
 Implemented so far:
 
@@ -29,10 +31,24 @@ Implemented so far:
 - `backend/.env.example` with the database settings used by the local compose stack.
 - A simple root endpoint returning backend status text.
 
+### Step 2 — Order creation + outbox write
+
+Implemented so far:
+
+- `POST /orders` endpoint.
+- `CreateOrderService` application use case.
+- `OrderRepository` port with a TypeORM implementation.
+- Transaction runner abstraction backed by TypeORM transactions.
+- Outbox event repository abstraction backed by the `outbox_events` table.
+- Order creation with initial `PENDING` status.
+- Transactional `order.created` outbox write in the same database transaction as
+  the order row.
+- Unit tests for the create-order use case.
+- E2E coverage proving `POST /orders` creates both the order and the outbox
+  event.
+
 Not implemented yet:
 
-- Order creation.
-- Transactional outbox writes.
 - RabbitMQ publisher/consumers.
 - Idempotency guard behavior.
 - Debug `/ops` endpoints.
@@ -120,3 +136,101 @@ database settings to be available. Start Postgres first if you run:
 cd backend
 npm run test:e2e
 ```
+
+The e2e suite uses a separate Postgres database named `orderflow_test` by
+default. It creates that database when needed, then truncates only test-looking
+database names before each test. This keeps local development data in
+`orderflow` away from the e2e cleanup step.
+
+## Architecture
+
+### Orders create flow
+
+The orders feature is split into small layers so the HTTP API, business flow,
+database persistence, and event contract stay separate.
+
+```text
+backend/src/orders/
+|-- orders.module.ts
+|   Registers the controller, create service, Order entity, and repository binding.
+|
+|-- orders.controller.ts
+|   POST /orders
+|   - accepts CreateOrderDto from the request body
+|   - reads optional x-correlation-id header
+|   - delegates to CreateOrderService
+|   - maps the saved Order entity to CreateOrderResponseDto
+|
+|-- dto/
+|   `-- create-order.dto.ts
+|       Request/response shapes for the HTTP boundary.
+|
+|-- application/
+|   |-- create-order.service.ts
+|   |   Main use case:
+|   |   - opens a transaction
+|   |   - creates a pending order through OrderRepository
+|   |   - creates an order.created event payload
+|   |   - appends that event to the transactional outbox
+|   |
+|   `-- order-repository.ts
+|       Repository port/interface used by the application layer.
+|       The service depends on this abstraction, not on TypeORM directly.
+|
+|-- infrastructure/
+|   `-- typeorm-order.repository.ts
+|       Repository adapter that implements OrderRepository with TypeORM.
+|       It uses the transaction EntityManager when one is provided.
+|
+|-- entities/
+|   `-- order.entity.ts
+|       TypeORM mapping for the orders database table.
+|
+|-- contracts/
+|   `-- events.ts
+|       Domain event payload types published through the outbox.
+|
+`-- order-status.enum.ts
+    Shared order status values, for example pending.
+```
+
+```text
+POST /orders
+    |
+    v
+OrdersController.create()
+    |
+    |  CreateOrderDto + optional x-correlation-id
+    v
+CreateOrderService.create()
+    |
+    |  transaction.run(...)
+    v
++----------------------------- transaction -----------------------------+
+|                                                                       |
+|  OrderRepository.create(...)                                          |
+|      |                                                                |
+|      v                                                                |
+|  TypeormOrderRepository.create(...)                                   |
+|      |                                                                |
+|      v                                                                |
+|  orders table                                                         |
+|                                                                       |
+|  build OrderCreatedEventV1                                            |
+|      |                                                                |
+|      v                                                                |
+|  OutboxEventRepository.append(...)                                    |
+|      |                                                                |
+|      v                                                                |
+|  outbox_events table                                                  |
+|                                                                       |
++-----------------------------------------------------------------------+
+    |
+    v
+Order entity -> CreateOrderResponseDto -> HTTP 201
+```
+
+The key idea is that `CreateOrderService` owns the business workflow, while
+`TypeormOrderRepository` owns the database details. The `ORDER_REPOSITORY`
+symbol in `order-repository.ts` is the Nest injection token that connects those
+two pieces in `orders.module.ts`.

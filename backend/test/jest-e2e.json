@@ -2,6 +2,7 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": ".",
   "testEnvironment": "node",
+  "setupFiles": ["<rootDir>/setup-e2e-env.js"],
   "testRegex": ".e2e-spec.ts$",
   "moduleNameMapper": {
     "^uuid$": "<rootDir>/jest-shims/uuid.cjs"

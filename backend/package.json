@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -66,6 +67,9 @@
     ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
+    "moduleNameMapper": {
+      "^uuid$": "<rootDir>/../test/jest-shims/uuid.cjs"
+    },
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
