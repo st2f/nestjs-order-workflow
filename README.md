@@ -70,6 +70,10 @@ cd backend
 cp .env.example .env
 ```
 
+The backend uses `backend/.env` for local development. The `test:e2e` script
+sets `NODE_ENV=test` and loads `backend/.env.test`, which points at the
+separate `orderflow_test` database.
+
 Start local infrastructure:
 
 ```bash

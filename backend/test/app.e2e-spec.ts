@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { config as loadEnvFile } from 'dotenv';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource } from 'typeorm';
@@ -182,6 +183,11 @@ describe('Backend smoke tests (e2e)', () => {
 });
 
 async function ensureTestDatabase() {
+  loadEnvFile({
+    path: '.env.test',
+    quiet: true,
+  });
+
   const database = process.env.DB_NAME;
 
   if (!database || !isSafeTestDatabaseName(database)) {
@@ -192,11 +198,11 @@ async function ensureTestDatabase() {
 
   const maintenanceDataSource = new DataSource({
     type: 'postgres',
-    host: process.env.DB_HOST ?? 'localhost',
-    port: Number(process.env.DB_PORT ?? 5432),
-    username: process.env.DB_USERNAME ?? 'orderflow',
-    password: process.env.DB_PASSWORD ?? 'orderflow',
-    database: 'postgres',
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: database,
   });
 
   await maintenanceDataSource.initialize();
