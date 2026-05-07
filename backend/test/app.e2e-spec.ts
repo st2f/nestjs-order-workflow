@@ -24,8 +24,6 @@ describe('Backend smoke tests (e2e)', () => {
   let app: INestApplication<App>;
   let dataSource: DataSource;
 
-  jest.setTimeout(15000);
-
   beforeAll(async () => {
     await ensureTestDatabase();
 
