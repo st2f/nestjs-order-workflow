@@ -34,6 +34,15 @@ import { PaymentsModule } from './payments/payments.module';
         RABBITMQ_USERNAME: Joi.string().required(),
         RABBITMQ_PASSWORD: Joi.string().required(),
         RABBITMQ_MANAGEMENT_URL: Joi.string().uri().required(),
+        RABBITMQ_EXCHANGE: Joi.string().default('orderflow.events'),
+        OUTBOX_PUBLISHER_ENABLED: Joi.boolean().default(
+          process.env.NODE_ENV !== 'test',
+        ),
+        OUTBOX_PUBLISHER_POLL_INTERVAL_MS: Joi.number()
+          .integer()
+          .min(100)
+          .default(1000),
+        OUTBOX_PUBLISHER_BATCH_SIZE: Joi.number().integer().min(1).default(20),
       }),
       validationOptions: {
         abortEarly: false,

@@ -47,9 +47,27 @@ Implemented so far:
 - E2E coverage proving `POST /orders` creates both the order and the outbox
   event.
 
+### Step 3 — Outbox publisher
+
+Implemented so far:
+
+- Polling outbox publisher registered in the backend process.
+- RabbitMQ publishing through a durable topic exchange named
+  `orderflow.events` by default.
+- Event routing keys match `outbox_events.type`, for example `order.created`.
+- Successful publishes set `outbox_events.published_at`.
+- Failed publishes keep the row unpublished, increment `retry_count`, and store
+  `last_error` for later retry/inspection.
+- Publisher configuration through `.env`:
+  - `RABBITMQ_EXCHANGE`
+  - `OUTBOX_PUBLISHER_ENABLED`
+  - `OUTBOX_PUBLISHER_POLL_INTERVAL_MS`
+  - `OUTBOX_PUBLISHER_BATCH_SIZE`
+- Unit tests for successful publish and failed publish handling.
+
 Not implemented yet:
 
-- RabbitMQ publisher/consumers.
+- RabbitMQ consumers.
 - Idempotency guard behavior.
 - Debug `/ops` endpoints.
 - Frontend.
@@ -95,6 +113,10 @@ RabbitMQ is available for later steps at:
 - Management UI: `http://localhost:15672`
 - Username: `orderflow`
 - Password: `orderflow`
+
+The outbox publisher sends messages to the durable topic exchange
+`orderflow.events` by default. Consumers can bind queues with event-type routing
+keys such as `order.created`.
 
 The backend listens on `http://localhost:3000` by default.
 

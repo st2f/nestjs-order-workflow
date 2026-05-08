@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, EntityManager } from 'typeorm';
-import { OutboxEventRepository } from '../application/outbox-event-repository';
-import { TransactionContext } from '../application/transaction-runner';
-import { DomainEvent } from '../contracts/domain-event';
+import { DataSource, EntityManager, IsNull } from 'typeorm';
+import type { OutboxEventRepository } from '../application/outbox-event-repository';
+import type { TransactionContext } from '../application/transaction-runner';
+import type { DomainEvent } from '../contracts/domain-event';
 import { OutboxEvent } from '../entities/outbox-event.entity';
 
 @Injectable()
@@ -22,5 +22,30 @@ export class TypeormOutboxEventRepository implements OutboxEventRepository {
         payload: event,
       }),
     );
+  }
+
+  findUnpublished(limit: number): Promise<OutboxEvent[]> {
+    return this.dataSource.getRepository(OutboxEvent).find({
+      where: { publishedAt: IsNull() },
+      order: { occurredAt: 'ASC' },
+      take: limit,
+    });
+  }
+
+  async markPublished(eventId: string, publishedAt: Date): Promise<void> {
+    await this.dataSource.getRepository(OutboxEvent).update(eventId, {
+      publishedAt,
+      lastError: null,
+    });
+  }
+
+  async markPublishFailed(eventId: string, error: Error): Promise<void> {
+    await this.dataSource
+      .getRepository(OutboxEvent)
+      .increment({ id: eventId }, 'retryCount', 1);
+
+    await this.dataSource.getRepository(OutboxEvent).update(eventId, {
+      lastError: error.message,
+    });
   }
 }

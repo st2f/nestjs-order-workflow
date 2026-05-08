@@ -40,6 +40,9 @@ function givenOutboxRepository() {
       eventsAppended.push(event as OrderCreatedEventV1);
       return Promise.resolve();
     },
+    findUnpublished: () => Promise.resolve([]),
+    markPublished: () => Promise.resolve(),
+    markPublishFailed: () => Promise.resolve(),
   };
 
   return { outbox, eventsAppended };
