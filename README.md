@@ -65,10 +65,32 @@ Implemented so far:
   - `OUTBOX_PUBLISHER_BATCH_SIZE`
 - Unit tests for successful publish and failed publish handling.
 
+### Step 4 — Payment consumer
+
+Implemented so far:
+
+- RabbitMQ `order.created` consumer registered in the backend process.
+- Durable queue named `payments.order-created.v1` by default.
+- Queue binding from `payments.order-created.v1` to the `orderflow.events`
+  topic exchange with routing key `order.created`.
+- `ProcessOrderCreatedService` application use case.
+- `PaymentRepository` port with a TypeORM implementation.
+- Fake payment provider behavior that succeeds by default.
+- Payment creation with `SUCCEEDED` status and one attempt.
+- Transactional `payment.succeeded` outbox write in the same database
+  transaction as the payment row.
+- Duplicate `order.created` handling at the payment table boundary: if a
+  payment already exists for the order, no second payment or event is created.
+- Consumer configuration through `.env`:
+  - `RABBITMQ_CONSUMERS_ENABLED`
+  - `RABBITMQ_PAYMENTS_ORDER_CREATED_QUEUE`
+- Unit tests for the payment use case.
+
 Not implemented yet:
 
-- RabbitMQ consumers.
-- Idempotency guard behavior.
+- Order status updates from payment events.
+- Enrollment consumer.
+- Full processed-events idempotency guard behavior.
 - Debug `/ops` endpoints.
 - Frontend.
 
@@ -115,8 +137,9 @@ RabbitMQ is available for later steps at:
 - Password: `orderflow`
 
 The outbox publisher sends messages to the durable topic exchange
-`orderflow.events` by default. Consumers can bind queues with event-type routing
-keys such as `order.created`.
+`orderflow.events` by default. The payment consumer binds the durable
+`payments.order-created.v1` queue to that exchange with the `order.created`
+routing key.
 
 The backend listens on `http://localhost:3000` by default.
 

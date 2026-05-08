@@ -14,5 +14,12 @@ export default () => ({
       process.env.OUTBOX_PUBLISHER_POLL_INTERVAL_MS ?? 1000,
     ),
     outboxBatchSize: Number(process.env.OUTBOX_PUBLISHER_BATCH_SIZE ?? 20),
+    consumersEnabled:
+      process.env.RABBITMQ_CONSUMERS_ENABLED === undefined
+        ? process.env.NODE_ENV !== 'test'
+        : process.env.RABBITMQ_CONSUMERS_ENABLED === 'true',
+    paymentsOrderCreatedQueue:
+      process.env.RABBITMQ_PAYMENTS_ORDER_CREATED_QUEUE ??
+      'payments.order-created.v1',
   },
 });

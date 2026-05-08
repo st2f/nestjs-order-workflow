@@ -43,6 +43,12 @@ import { PaymentsModule } from './payments/payments.module';
           .min(100)
           .default(1000),
         OUTBOX_PUBLISHER_BATCH_SIZE: Joi.number().integer().min(1).default(20),
+        RABBITMQ_CONSUMERS_ENABLED: Joi.boolean().default(
+          process.env.NODE_ENV !== 'test',
+        ),
+        RABBITMQ_PAYMENTS_ORDER_CREATED_QUEUE: Joi.string().default(
+          'payments.order-created.v1',
+        ),
       }),
       validationOptions: {
         abortEarly: false,
