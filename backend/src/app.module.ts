@@ -49,6 +49,9 @@ import { PaymentsModule } from './payments/payments.module';
         RABBITMQ_PAYMENTS_ORDER_CREATED_QUEUE: Joi.string().default(
           'payments.order-created.v1',
         ),
+        RABBITMQ_ORDERS_PAYMENT_EVENTS_QUEUE: Joi.string().default(
+          'orders.payment-events.v1',
+        ),
       }),
       validationOptions: {
         abortEarly: false,

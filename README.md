@@ -2,13 +2,156 @@
 
 # OrderFlow
 
-OrderFlow is a small NestJS backend for demonstrating an event-driven course
-purchase workflow.
+OrderFlow is a small learning project for building an event-driven purchase
+workflow with NestJS, Postgres, and RabbitMQ.
 
-This repository is split into two application directories:
+It models a course purchase from order creation through asynchronous payment
+processing, using a transactional outbox so database changes and published
+events stay reliable. The goal is not to build a production shop, but to make
+the moving parts of event-driven systems visible and testable.
 
-- `backend/` contains the NestJS API and worker-facing domain modules.
+You can use this repo to explore:
+
+- creating an order through an HTTP API
+- storing domain events in an outbox table
+- publishing events to RabbitMQ
+- consuming events in another module
+- updating order state from asynchronous payment results
+- handling duplicate messages safely with processed-event tracking
+
+<img width="1974" height="1058" alt="image" src="https://github.com/user-attachments/assets/832a9f13-f54a-4301-8912-d26a67145870" />
+
+## Repository layout
+
+- `backend/` contains the NestJS API, domain modules, RabbitMQ consumers, and
+  outbox publisher.
 - `frontend/` contains the minimal React debug UI.
+- [`specs/project.md`](specs/project.md) contains the full project
+  specifications, architecture notes, and implementation order.
+
+## Quick start
+
+```bash
+docker compose up -d postgres rabbitmq
+
+cd backend
+cp .env.example .env
+npm install
+npm run start:dev
+```
+
+The backend starts at `http://localhost:3000`.
+
+Create an order:
+
+```bash
+curl -X POST http://localhost:3000/orders \
+  -H 'content-type: application/json' \
+  -d '{
+    "userId": "00000000-0000-0000-0000-000000000001",
+    "courseId": "00000000-0000-0000-0000-000000000002",
+    "amount": "49.99"
+  }'
+```
+
+## Backend setup
+
+Install dependencies:
+
+```bash
+cd backend
+npm install
+```
+
+Create a local environment file:
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+The backend uses `backend/.env` for local development. The `test:e2e` script
+sets `NODE_ENV=test` and loads `backend/.env.test`, which points at the
+separate `orderflow_test` database.
+
+Start local infrastructure:
+
+```bash
+docker compose up -d postgres rabbitmq
+```
+
+Start the backend in watch mode:
+
+```bash
+cd backend
+npm run start:dev
+```
+
+With `TYPEORM_SYNCHRONIZE=true` in `.env`, TypeORM automatically creates tables from entities at startup (development only).
+
+RabbitMQ is available for later steps at:
+
+- AMQP: `localhost:5672`
+- Management UI: `http://localhost:15672`
+- Username: `orderflow`
+- Password: `orderflow`
+
+The outbox publisher sends messages to the durable topic exchange
+`orderflow.events` by default. The payment consumer binds the durable
+`payments.order-created.v1` queue to that exchange with the `order.created`
+routing key. The Orders module also binds the durable
+`orders.payment-events.v1` queue to the same exchange with `payment.succeeded`
+and `payment.failed` routing keys.
+
+The backend listens on `http://localhost:3000` by default.
+
+## Frontend setup
+
+Install dependencies:
+
+```bash
+cd frontend
+npm install
+```
+
+Start the frontend in watch mode:
+
+```bash
+cd frontend
+npm run dev
+```
+
+The frontend listens on `http://localhost:5173` by default. Vite proxies `/api`
+requests to the backend at `http://localhost:3000`, so keep the backend running
+when testing UI calls.
+
+## Verification
+
+Run the current checks:
+
+```bash
+cd backend
+npm run build
+npm run lint
+npm run test
+
+cd ../frontend
+npm run build
+npm run test
+```
+
+The e2e test imports the full Nest application and therefore expects the local
+database settings to be available. Start Postgres first if you run:
+
+```bash
+cd backend
+npm run test:e2e
+```
+
+The e2e suite uses a separate Postgres database named `orderflow_test` by
+default. It creates that database when needed, then truncates only test-looking
+database names before each test. This keeps local development data in
+`orderflow` away from the e2e cleanup step.
 
 ## Current progress
 
@@ -86,110 +229,34 @@ Implemented so far:
   - `RABBITMQ_PAYMENTS_ORDER_CREATED_QUEUE`
 - Unit tests for the payment use case.
 
+### Step 5 — Order status updates from payment events
+
+Implemented so far:
+
+- RabbitMQ payment-events consumer registered in the Orders module.
+- Durable queue named `orders.payment-events.v1` by default.
+- Queue bindings from `orders.payment-events.v1` to the `orderflow.events`
+  topic exchange with routing keys:
+  - `payment.succeeded`
+  - `payment.failed`
+- `ProcessPaymentEventService` application use case.
+- Order repository support for finding an order and updating its status.
+- `payment.succeeded` updates a `PENDING` order to `PAID`.
+- `payment.failed` updates a `PENDING` order to `PAYMENT_FAILED`.
+- Explicit transition validation: invalid order status transitions are rejected.
+- Processed-event idempotency guard backed by the `processed_events` table.
+- Duplicate payment events are skipped for the stable consumer name
+  `orders.payment-events.v1`.
+- Consumer configuration through `.env`:
+  - `RABBITMQ_ORDERS_PAYMENT_EVENTS_QUEUE`
+- Unit tests for paid, payment-failed, duplicate-event, and invalid-transition
+  behavior.
+
 Not implemented yet:
 
-- Order status updates from payment events.
 - Enrollment consumer.
-- Full processed-events idempotency guard behavior.
 - Debug `/ops` endpoints.
 - Frontend.
-
-## Backend setup
-
-Install dependencies:
-
-```bash
-cd backend
-npm install
-```
-
-Create a local environment file:
-
-```bash
-cd backend
-cp .env.example .env
-```
-
-The backend uses `backend/.env` for local development. The `test:e2e` script
-sets `NODE_ENV=test` and loads `backend/.env.test`, which points at the
-separate `orderflow_test` database.
-
-Start local infrastructure:
-
-```bash
-docker compose up -d postgres rabbitmq
-```
-
-Start the backend in watch mode:
-
-```bash
-cd backend
-npm run start:dev
-```
-
-With `TYPEORM_SYNCHRONIZE=true` in `.env`, TypeORM automatically creates tables from entities at startup (development only).
-
-RabbitMQ is available for later steps at:
-
-- AMQP: `localhost:5672`
-- Management UI: `http://localhost:15672`
-- Username: `orderflow`
-- Password: `orderflow`
-
-The outbox publisher sends messages to the durable topic exchange
-`orderflow.events` by default. The payment consumer binds the durable
-`payments.order-created.v1` queue to that exchange with the `order.created`
-routing key.
-
-The backend listens on `http://localhost:3000` by default.
-
-## Frontend setup
-
-Install dependencies:
-
-```bash
-cd frontend
-npm install
-```
-
-Start the frontend in watch mode:
-
-```bash
-cd frontend
-npm run dev
-```
-
-The frontend listens on `http://localhost:5173` by default. Vite proxies `/api`
-requests to the backend at `http://localhost:3000`, so keep the backend running
-when testing UI calls.
-
-## Verification
-
-Run the current checks:
-
-```bash
-cd backend
-npm run build
-npm run lint
-npm run test
-
-cd ../frontend
-npm run build
-npm run test
-```
-
-The e2e test imports the full Nest application and therefore expects the local
-database settings to be available. Start Postgres first if you run:
-
-```bash
-cd backend
-npm run test:e2e
-```
-
-The e2e suite uses a separate Postgres database named `orderflow_test` by
-default. It creates that database when needed, then truncates only test-looking
-database names before each test. This keeps local development data in
-`orderflow` away from the e2e cleanup step.
 
 ## Architecture
 
@@ -283,3 +350,61 @@ The key idea is that `CreateOrderService` owns the business workflow, while
 `TypeormOrderRepository` owns the database details. The `ORDER_REPOSITORY`
 symbol in `order-repository.ts` is the Nest injection token that connects those
 two pieces in `orders.module.ts`.
+
+### Payment event status flow
+
+Payment events are domain facts published by the payments module through the
+outbox. RabbitMQ routing sends those facts to the Orders module queue so orders
+can update their own lifecycle state.
+
+```text
+payments emits payment.succeeded
+    |
+    v
+outbox_events row with type = payment.succeeded
+    |
+    v
+OutboxPublisherService
+    |
+    |  publish to exchange orderflow.events
+    |  routing key payment.succeeded
+    v
+RabbitMQ topic exchange
+    |
+    |  binding: payment.succeeded -> orders.payment-events.v1
+    v
+orders.payment-events.v1 queue
+    |
+    v
+AmqpPaymentEventsConsumer
+    |
+    v
+ProcessPaymentEventService
+    |
+    |  insert processed_events(event_id, consumer)
+    |  find order
+    |  validate transition
+    |  update status
+    v
+orders.status = PAID
+```
+
+`payment.failed` follows the same route, but updates a `PENDING` order to
+`PAYMENT_FAILED`.
+
+`bindQueue(...)` sets up the RabbitMQ routing. `consume(...)` is the part that
+actually listens to messages from the queue.
+
+```text
+payment.succeeded ----+
+                      |
+                      v
+              orders.payment-events.v1
+                      ^
+                      |
+payment.failed -------+
+```
+
+For this step, the workflow intentionally skips `PAYMENT_IN_PROGRESS`; newly
+created orders remain `PENDING` until a final payment event changes them to
+`PAID` or `PAYMENT_FAILED`.

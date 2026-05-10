@@ -2,6 +2,30 @@
 
 ---
 
+## Navigation
+
+- [1. Goal](#1-goal)
+- [2. Scope](#2-scope)
+- [3. High-Level Architecture](#3-high-level-architecture)
+- [4. Ownership by Module](#4-ownership-by-module)
+- [5. Order State Machine](#5-order-state-machine)
+- [6. Core Data Model](#6-core-data-model)
+- [7. Event Catalog](#7-event-catalog)
+- [8. Happy Path Sequence](#8-happy-path-sequence)
+- [9. Compensation Sequence](#9-compensation-sequence)
+- [10. Failure Matrix](#10-failure-matrix)
+- [11. Idempotency Strategy](#11-idempotency-strategy)
+- [12. Outbox Strategy](#12-outbox-strategy)
+- [13. Retry / DLQ Rules](#13-retry--dlq-rules)
+- [14. Observability / Debug](#14-observability--debug)
+- [15. Testing Blueprint](#15-testing-blueprint)
+- [16. What the Demo Should Prove](#16-what-the-demo-should-prove)
+- [17. Final Philosophy](#17-final-philosophy)
+- [18. Stack](#18-stack)
+- [19. Suggested Implementation Order](#19-suggested-implementation-order)
+
+---
+
 ## 1. Goal
 
 Build a small NestJS backend system that demonstrates, end to end:
@@ -731,7 +755,7 @@ Backend
 - Postgres
 - RabbitMQ
 - TypeORM
-- Jest
+- Vitest
 
 Frontend
 

@@ -18,6 +18,7 @@ function givenTransactionRunner(): TransactionRunner {
 
 function givenOrderRepository() {
   const orders: OrderRepository = {
+    findById: () => Promise.resolve(null),
     create: (newOrder: NewOrder) => {
       const order = {
         id: randomUUID(),
@@ -27,6 +28,7 @@ function givenOrderRepository() {
       };
       return Promise.resolve(order);
     },
+    updateStatus: () => Promise.resolve(),
   };
 
   return orders;

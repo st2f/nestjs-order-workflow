@@ -12,5 +12,11 @@ export type NewOrder = {
 };
 
 export type OrderRepository = {
+  findById(orderId: string, tx?: TransactionContext): Promise<Order | null>;
   create(order: NewOrder, tx?: TransactionContext): Promise<Order>;
+  updateStatus(
+    orderId: string,
+    status: OrderStatus,
+    tx?: TransactionContext,
+  ): Promise<void>;
 };

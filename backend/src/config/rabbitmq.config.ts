@@ -21,5 +21,8 @@ export default () => ({
     paymentsOrderCreatedQueue:
       process.env.RABBITMQ_PAYMENTS_ORDER_CREATED_QUEUE ??
       'payments.order-created.v1',
+    ordersPaymentEventsQueue:
+      process.env.RABBITMQ_ORDERS_PAYMENT_EVENTS_QUEUE ??
+      'orders.payment-events.v1',
   },
 });
