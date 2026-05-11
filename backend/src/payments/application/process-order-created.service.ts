@@ -61,6 +61,7 @@ export class ProcessOrderCreatedService {
         data: {
           orderId: event.data.orderId,
           paymentId: payment.id,
+          courseId: event.data.courseId,
           amount: event.data.amount,
         },
       };

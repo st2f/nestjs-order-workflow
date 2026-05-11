@@ -24,5 +24,8 @@ export default () => ({
     ordersPaymentEventsQueue:
       process.env.RABBITMQ_ORDERS_PAYMENT_EVENTS_QUEUE ??
       'orders.payment-events.v1',
+    enrollmentsPaymentSucceededQueue:
+      process.env.RABBITMQ_ENROLLMENTS_PAYMENT_SUCCEEDED_QUEUE ??
+      'enrollments.payment-succeeded.v1',
   },
 });

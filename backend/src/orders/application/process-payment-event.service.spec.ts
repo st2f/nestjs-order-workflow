@@ -98,6 +98,7 @@ function givenPaymentSucceededEvent(orderId: string): PaymentSucceededEventV1 {
     data: {
       orderId,
       paymentId: randomUUID(),
+      courseId: randomUUID(),
       amount: '49.99',
     },
   };

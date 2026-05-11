@@ -122,6 +122,7 @@ describe('ProcessOrderCreatedService', () => {
         data: {
           orderId: event.data.orderId,
           paymentId: result.payment.id,
+          courseId: event.data.courseId,
           amount: event.data.amount,
         },
       }) as PaymentSucceededEventV1,

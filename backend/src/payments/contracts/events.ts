@@ -6,6 +6,7 @@ export type PaymentSucceededEventV1 = DomainEvent<
   {
     orderId: string;
     paymentId: string;
+    courseId: string;
     amount: string;
   }
 >;
