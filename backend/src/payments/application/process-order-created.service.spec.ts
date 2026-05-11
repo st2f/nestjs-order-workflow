@@ -52,6 +52,7 @@ function givenPaymentRepository(existingPayment?: Payment) {
   const payments: PaymentRepository = {
     findByOrderId,
     create,
+    updateStatus: () => Promise.resolve(),
   };
 
   return { payments, findByOrderId, create, paymentsCreated };

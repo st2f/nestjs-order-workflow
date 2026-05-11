@@ -101,7 +101,12 @@ The outbox publisher sends messages to the durable topic exchange
 `payments.order-created.v1` queue to that exchange with the `order.created`
 routing key. The Orders module also binds the durable
 `orders.payment-events.v1` queue to the same exchange with `payment.succeeded`
-and `payment.failed` routing keys.
+and `payment.failed` routing keys. The Enrollments module binds the durable
+`enrollments.payment-succeeded.v1` queue with the `payment.succeeded` routing
+key. The Orders module also binds `orders.lifecycle-events.v1` with
+`enrollment.granted`, `enrollment.failed`, and `refund.succeeded` routing keys.
+The Payments module binds `payments.refund-requested.v1` with the
+`refund.requested` routing key.
 
 The backend listens on `http://localhost:3000` by default.
 
@@ -252,9 +257,66 @@ Implemented so far:
 - Unit tests for paid, payment-failed, duplicate-event, and invalid-transition
   behavior.
 
+### Step 6 — Enrollment consumer
+
+Implemented so far:
+
+- RabbitMQ `payment.succeeded` consumer registered in the Enrollments module.
+- Durable queue named `enrollments.payment-succeeded.v1` by default.
+- Queue binding from `enrollments.payment-succeeded.v1` to the
+  `orderflow.events` topic exchange with routing key `payment.succeeded`.
+- `ProcessPaymentSucceededService` application use case.
+- `EnrollmentRepository` port with a TypeORM implementation.
+- `payment.succeeded` now carries `courseId` so enrollment can grant access
+  without reading Orders internals.
+- Enrollment creation with `GRANTED` status.
+- Transactional `enrollment.granted` outbox write in the same database
+  transaction as the enrollment row.
+- Processed-event idempotency guard backed by the `processed_events` table.
+- Duplicate payment events are skipped for the stable consumer name
+  `enrollments.payment-succeeded.v1`.
+- Duplicate enrollment creation is also guarded at the enrollment table
+  boundary: if an enrollment already exists for the order, no second enrollment
+  or event is created.
+- Consumer configuration through `.env`:
+  - `RABBITMQ_ENROLLMENTS_PAYMENT_SUCCEEDED_QUEUE`
+- Unit tests for enrollment creation, duplicate-event handling, and existing
+  enrollment handling.
+
+### Step 7 — Compensation flow
+
+Implemented so far:
+
+- RabbitMQ order lifecycle consumer registered in the Orders module.
+- Durable queue named `orders.lifecycle-events.v1` by default.
+- Queue bindings from `orders.lifecycle-events.v1` to the `orderflow.events`
+  topic exchange with routing keys:
+  - `enrollment.granted`
+  - `enrollment.failed`
+  - `refund.succeeded`
+- `ProcessOrderLifecycleEventService` application use case.
+- `enrollment.granted` updates a `PAID` order to `COMPLETED`.
+- `enrollment.failed` updates a `PAID` order to `REFUND_IN_PROGRESS` and writes
+  `refund.requested` to the outbox in the same transaction.
+- Duplicate or repeated `enrollment.failed` events do not write another
+  `refund.requested` once the order is already `REFUND_IN_PROGRESS`.
+- `refund.succeeded` updates a `REFUND_IN_PROGRESS` order to `REFUNDED`.
+- RabbitMQ `refund.requested` consumer registered in the Payments module.
+- Durable queue named `payments.refund-requested.v1` by default.
+- `ProcessRefundRequestedService` application use case.
+- `refund.requested` updates a succeeded payment to `REFUND_SUCCEEDED` and
+  writes `refund.succeeded` to the outbox in the same transaction.
+- Duplicate refund requests are skipped for the stable consumer name
+  `payments.refund-requested.v1`; already-refunded payments do not emit another
+  `refund.succeeded`.
+- Consumer configuration through `.env`:
+  - `RABBITMQ_ORDERS_LIFECYCLE_EVENTS_QUEUE`
+  - `RABBITMQ_PAYMENTS_REFUND_REQUESTED_QUEUE`
+- Unit tests for order completion, refund request emission, refund completion,
+  duplicate handling, and invalid transition behavior.
+
 Not implemented yet:
 
-- Enrollment consumer.
 - Debug `/ops` endpoints.
 - Frontend.
 

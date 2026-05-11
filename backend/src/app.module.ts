@@ -52,8 +52,14 @@ import { PaymentsModule } from './payments/payments.module';
         RABBITMQ_ORDERS_PAYMENT_EVENTS_QUEUE: Joi.string().default(
           'orders.payment-events.v1',
         ),
+        RABBITMQ_ORDERS_LIFECYCLE_EVENTS_QUEUE: Joi.string().default(
+          'orders.lifecycle-events.v1',
+        ),
         RABBITMQ_ENROLLMENTS_PAYMENT_SUCCEEDED_QUEUE: Joi.string().default(
           'enrollments.payment-succeeded.v1',
+        ),
+        RABBITMQ_PAYMENTS_REFUND_REQUESTED_QUEUE: Joi.string().default(
+          'payments.refund-requested.v1',
         ),
       }),
       validationOptions: {

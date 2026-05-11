@@ -6,6 +6,7 @@ import type {
   PaymentRepository,
 } from '../application/payment-repository';
 import { Payment } from '../entities/payment.entity';
+import { PaymentStatus } from '../payment-status.enum';
 
 @Injectable()
 export class TypeormPaymentRepository implements PaymentRepository {
@@ -25,5 +26,15 @@ export class TypeormPaymentRepository implements PaymentRepository {
     const repository = manager.getRepository(Payment);
 
     return repository.save(repository.create(payment));
+  }
+
+  async updateStatus(
+    paymentId: string,
+    status: PaymentStatus,
+    tx?: TransactionContext,
+  ): Promise<void> {
+    const manager = tx instanceof EntityManager ? tx : this.dataSource.manager;
+
+    await manager.getRepository(Payment).update(paymentId, { status });
   }
 }

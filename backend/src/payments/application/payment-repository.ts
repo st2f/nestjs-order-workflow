@@ -17,4 +17,9 @@ export type PaymentRepository = {
     tx?: TransactionContext,
   ): Promise<Payment | null>;
   create(payment: NewPayment, tx?: TransactionContext): Promise<Payment>;
+  updateStatus(
+    paymentId: string,
+    status: PaymentStatus,
+    tx?: TransactionContext,
+  ): Promise<void>;
 };

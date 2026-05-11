@@ -24,8 +24,14 @@ export default () => ({
     ordersPaymentEventsQueue:
       process.env.RABBITMQ_ORDERS_PAYMENT_EVENTS_QUEUE ??
       'orders.payment-events.v1',
+    ordersLifecycleEventsQueue:
+      process.env.RABBITMQ_ORDERS_LIFECYCLE_EVENTS_QUEUE ??
+      'orders.lifecycle-events.v1',
     enrollmentsPaymentSucceededQueue:
       process.env.RABBITMQ_ENROLLMENTS_PAYMENT_SUCCEEDED_QUEUE ??
       'enrollments.payment-succeeded.v1',
+    paymentsRefundRequestedQueue:
+      process.env.RABBITMQ_PAYMENTS_REFUND_REQUESTED_QUEUE ??
+      'payments.refund-requested.v1',
   },
 });
