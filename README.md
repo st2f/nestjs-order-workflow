@@ -19,7 +19,7 @@ You can use this repo to explore:
 - updating order state from asynchronous payment results
 - handling duplicate messages safely with processed-event tracking
 
-<img width="1974" height="1058" alt="image" src="https://github.com/user-attachments/assets/832a9f13-f54a-4301-8912-d26a67145870" />
+<img width="1200" height="721" alt="image" src="https://github.com/user-attachments/assets/88ee3562-9aa4-4308-9187-f9db5479dd91" />
 
 ## Repository layout
 
@@ -89,24 +89,12 @@ npm run start:dev
 
 With `TYPEORM_SYNCHRONIZE=true` in `.env`, TypeORM automatically creates tables from entities at startup (development only).
 
-RabbitMQ is available for later steps at:
+RabbitMQ is available at:
 
 - AMQP: `localhost:5672`
 - Management UI: `http://localhost:15672`
 - Username: `orderflow`
 - Password: `orderflow`
-
-The outbox publisher sends messages to the durable topic exchange
-`orderflow.events` by default. The payment consumer binds the durable
-`payments.order-created.v1` queue to that exchange with the `order.created`
-routing key. The Orders module also binds the durable
-`orders.payment-events.v1` queue to the same exchange with `payment.succeeded`
-and `payment.failed` routing keys. The Enrollments module binds the durable
-`enrollments.payment-succeeded.v1` queue with the `payment.succeeded` routing
-key. The Orders module also binds `orders.lifecycle-events.v1` with
-`enrollment.granted`, `enrollment.failed`, and `refund.succeeded` routing keys.
-The Payments module binds `payments.refund-requested.v1` with the
-`refund.requested` routing key.
 
 The backend listens on `http://localhost:3000` by default.
 
@@ -315,10 +303,34 @@ Implemented so far:
 - Unit tests for order completion, refund request emission, refund completion,
   duplicate handling, and invalid transition behavior.
 
+### Ops endpoints and real frontend flow
+
+Implemented so far:
+
+- `GET /ops/debug` returns:
+  - last 10 orders
+  - timeline events for those orders
+  - last 10 outbox events
+- Scenario endpoints used by the frontend:
+  - `POST /ops/scenarios/order-success`
+  - `POST /ops/scenarios/payment-failure`
+  - `POST /ops/scenarios/enrollment-failure`
+- `POST /ops/outbox/:id/republish` publishes an existing outbox event to
+  RabbitMQ again so duplicate handling can be tested from the UI.
+- The frontend scenario buttons call the real `/ops` endpoints through the
+  Vite `/api` proxy.
+- The frontend polls `/ops/debug` periodically so async state transitions become
+  visible without manual refresh.
+- Payment and enrollment failure scenarios use reserved scenario course IDs, so
+  they still travel through the normal outbox, RabbitMQ, and consumer flow:
+  - payment failure emits `payment.failed`
+  - enrollment failure emits `enrollment.failed`, then compensation emits
+    `refund.requested` and `refund.succeeded`
+
 Not implemented yet:
 
-- Debug `/ops` endpoints.
-- Frontend.
+- Dedicated processed-events UI table.
+- Advanced replay tooling beyond outbox re-publish.
 
 ## Architecture
 

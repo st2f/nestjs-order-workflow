@@ -5,7 +5,11 @@ import type { OutboxEventRepository } from '../../events/application/outbox-even
 import { TRANSACTION_RUNNER } from '../../events/application/transaction-runner';
 import type { TransactionRunner } from '../../events/application/transaction-runner';
 import type { OrderCreatedEventV1 } from '../../orders/contracts/events';
-import type { PaymentSucceededEventV1 } from '../contracts/events';
+import { PAYMENT_FAILURE_COURSE_ID } from '../../shared/scenario-course-ids';
+import type {
+  PaymentFailedEventV1,
+  PaymentSucceededEventV1,
+} from '../contracts/events';
 import type { Payment } from '../entities/payment.entity';
 import { PaymentStatus } from '../payment-status.enum';
 import {
@@ -40,6 +44,35 @@ export class ProcessOrderCreatedService {
 
       if (existingPayment) {
         return { payment: existingPayment, created: false };
+      }
+
+      if (event.data.courseId === PAYMENT_FAILURE_COURSE_ID) {
+        const payment = await this.payments.create(
+          {
+            orderId: event.data.orderId,
+            status: PaymentStatus.Failed,
+            attemptCount: 1,
+            providerReference: `fake-provider-${randomUUID()}`,
+          },
+          tx,
+        );
+
+        const paymentFailedEvent: PaymentFailedEventV1 = {
+          eventId: randomUUID(),
+          eventType: 'payment.failed',
+          version: 1,
+          occurredAt: new Date().toISOString(),
+          correlationId: event.correlationId,
+          data: {
+            orderId: event.data.orderId,
+            paymentId: payment.id,
+            reason: 'scenario_payment_failure',
+          },
+        };
+
+        await this.outbox.append(paymentFailedEvent, tx);
+
+        return { payment, created: true };
       }
 
       const payment = await this.payments.create(

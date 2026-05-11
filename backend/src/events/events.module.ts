@@ -37,6 +37,7 @@ import { TypeormTransactionRunner } from './infrastructure/typeorm-transaction-r
     TypeOrmModule,
     TRANSACTION_RUNNER,
     OUTBOX_EVENT_REPOSITORY,
+    EVENT_MESSAGE_PUBLISHER,
     PROCESSED_EVENT_REPOSITORY,
   ],
 })

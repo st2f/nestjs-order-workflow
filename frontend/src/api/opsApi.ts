@@ -6,6 +6,7 @@ export type OrderSummary = {
 
 export type TimelineEvent = {
   id: string;
+  orderId: string;
   type: string;
   status: string;
   createdAt: string;

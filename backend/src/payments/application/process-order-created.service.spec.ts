@@ -2,7 +2,11 @@ import { randomUUID } from 'crypto';
 import type { OutboxEventRepository } from '../../events/application/outbox-event-repository';
 import type { TransactionRunner } from '../../events/application/transaction-runner';
 import type { OrderCreatedEventV1 } from '../../orders/contracts/events';
-import type { PaymentSucceededEventV1 } from '../contracts/events';
+import { PAYMENT_FAILURE_COURSE_ID } from '../../shared/scenario-course-ids';
+import type {
+  PaymentFailedEventV1,
+  PaymentSucceededEventV1,
+} from '../contracts/events';
 import type { Payment } from '../entities/payment.entity';
 import { PaymentStatus } from '../payment-status.enum';
 import type { NewPayment, PaymentRepository } from './payment-repository';
@@ -19,14 +23,17 @@ function givenTransactionRunner(): TransactionRunner {
 }
 
 function givenOutboxRepository() {
-  const eventsAppended: PaymentSucceededEventV1[] = [];
+  const eventsAppended: Array<PaymentSucceededEventV1 | PaymentFailedEventV1> =
+    [];
   const append = vi.fn(
     (
       event: Parameters<OutboxEventRepository['append']>[0],
       tx?: Parameters<OutboxEventRepository['append']>[1],
     ) => {
       void tx;
-      eventsAppended.push(event as PaymentSucceededEventV1);
+      eventsAppended.push(
+        event as PaymentSucceededEventV1 | PaymentFailedEventV1,
+      );
       return Promise.resolve();
     },
   );
@@ -149,5 +156,40 @@ describe('ProcessOrderCreatedService', () => {
     });
     expect(createPayment).not.toHaveBeenCalled();
     expect(appendOutboxEvent).not.toHaveBeenCalled();
+  });
+
+  it('creates a failed payment and writes payment.failed for the payment failure scenario course', async () => {
+    const { service, paymentsCreated, eventsAppended } = givenTestContext();
+    const baseEvent = givenOrderCreatedEvent();
+    const event = {
+      ...baseEvent,
+      data: {
+        ...baseEvent.data,
+        courseId: PAYMENT_FAILURE_COURSE_ID,
+      },
+    };
+
+    const result = await service.process(event);
+
+    expect(result.created).toBe(true);
+    expect(paymentsCreated).toEqual([
+      expect.objectContaining({
+        orderId: event.data.orderId,
+        status: PaymentStatus.Failed,
+        attemptCount: 1,
+      }) as NewPayment,
+    ]);
+    expect(eventsAppended).toEqual([
+      expect.objectContaining({
+        eventType: 'payment.failed',
+        version: 1,
+        correlationId: event.correlationId,
+        data: {
+          orderId: event.data.orderId,
+          paymentId: result.payment.id,
+          reason: 'scenario_payment_failure',
+        },
+      }),
+    ]);
   });
 });

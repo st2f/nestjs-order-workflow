@@ -3,7 +3,11 @@ import type { OutboxEventRepository } from '../../events/application/outbox-even
 import type { ProcessedEventRepository } from '../../events/application/processed-event-repository';
 import type { TransactionRunner } from '../../events/application/transaction-runner';
 import type { PaymentSucceededEventV1 } from '../../payments/contracts/events';
-import type { EnrollmentGrantedEventV1 } from '../contracts/events';
+import { ENROLLMENT_FAILURE_COURSE_ID } from '../../shared/scenario-course-ids';
+import type {
+  EnrollmentFailedEventV1,
+  EnrollmentGrantedEventV1,
+} from '../contracts/events';
 import type { Enrollment } from '../entities/enrollment.entity';
 import { EnrollmentStatus } from '../enrollment-status.enum';
 import type {
@@ -23,14 +27,18 @@ function givenTransactionRunner(): TransactionRunner {
 }
 
 function givenOutboxRepository() {
-  const eventsAppended: EnrollmentGrantedEventV1[] = [];
+  const eventsAppended: Array<
+    EnrollmentGrantedEventV1 | EnrollmentFailedEventV1
+  > = [];
   const append = vi.fn(
     (
       event: Parameters<OutboxEventRepository['append']>[0],
       tx?: Parameters<OutboxEventRepository['append']>[1],
     ) => {
       void tx;
-      eventsAppended.push(event as EnrollmentGrantedEventV1);
+      eventsAppended.push(
+        event as EnrollmentGrantedEventV1 | EnrollmentFailedEventV1,
+      );
       return Promise.resolve();
     },
   );
@@ -200,5 +208,41 @@ describe('ProcessPaymentSucceededService', () => {
     });
     expect(createEnrollment).not.toHaveBeenCalled();
     expect(appendOutboxEvent).not.toHaveBeenCalled();
+  });
+
+  it('creates a failed enrollment and writes enrollment.failed for the enrollment failure scenario course', async () => {
+    const { service, enrollmentsCreated, eventsAppended } = givenTestContext();
+    const baseEvent = givenPaymentSucceededEvent();
+    const event = {
+      ...baseEvent,
+      data: {
+        ...baseEvent.data,
+        courseId: ENROLLMENT_FAILURE_COURSE_ID,
+      },
+    };
+
+    const result = await service.process(event);
+
+    expect(result.created).toBe(true);
+    expect(result.processed).toBe(true);
+    expect(enrollmentsCreated).toEqual([
+      {
+        orderId: event.data.orderId,
+        courseId: event.data.courseId,
+        status: EnrollmentStatus.Failed,
+      },
+    ]);
+    expect(eventsAppended).toEqual([
+      expect.objectContaining({
+        eventType: 'enrollment.failed',
+        version: 1,
+        correlationId: event.correlationId,
+        data: {
+          orderId: event.data.orderId,
+          courseId: event.data.courseId,
+          reason: 'scenario_no_seats_available',
+        },
+      }),
+    ]);
   });
 });

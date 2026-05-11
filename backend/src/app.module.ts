@@ -11,6 +11,7 @@ import rabbitmqConfig from './config/rabbitmq.config';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { EventsModule } from './events/events.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { OpsModule } from './ops/ops.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 
@@ -85,6 +86,7 @@ import { PaymentsModule } from './payments/payments.module';
     PaymentsModule,
     EnrollmentsModule,
     EventsModule,
+    OpsModule,
     NotificationsModule,
   ],
   controllers: [AppController],

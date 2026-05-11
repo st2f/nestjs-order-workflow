@@ -13,7 +13,11 @@ import {
   type TransactionRunner,
 } from '../../events/application/transaction-runner';
 import type { PaymentSucceededEventV1 } from '../../payments/contracts/events';
-import type { EnrollmentGrantedEventV1 } from '../contracts/events';
+import { ENROLLMENT_FAILURE_COURSE_ID } from '../../shared/scenario-course-ids';
+import type {
+  EnrollmentFailedEventV1,
+  EnrollmentGrantedEventV1,
+} from '../contracts/events';
 import type { Enrollment } from '../entities/enrollment.entity';
 import { EnrollmentStatus } from '../enrollment-status.enum';
 import {
@@ -67,6 +71,34 @@ export class ProcessPaymentSucceededService {
           enrollment: existingEnrollment,
           created: false,
         };
+      }
+
+      if (event.data.courseId === ENROLLMENT_FAILURE_COURSE_ID) {
+        const enrollment = await this.enrollments.create(
+          {
+            orderId: event.data.orderId,
+            courseId: event.data.courseId,
+            status: EnrollmentStatus.Failed,
+          },
+          tx,
+        );
+
+        const enrollmentFailedEvent: EnrollmentFailedEventV1 = {
+          eventId: randomUUID(),
+          eventType: 'enrollment.failed',
+          version: 1,
+          occurredAt: new Date().toISOString(),
+          correlationId: event.correlationId,
+          data: {
+            orderId: event.data.orderId,
+            courseId: event.data.courseId,
+            reason: 'scenario_no_seats_available',
+          },
+        };
+
+        await this.outbox.append(enrollmentFailedEvent, tx);
+
+        return { processed: true, enrollment, created: true };
       }
 
       const enrollment = await this.enrollments.create(
