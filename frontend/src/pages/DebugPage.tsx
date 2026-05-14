@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { LogOut } from "lucide-react";
 import type { DebugState, OrderSummary, OutboxEvent } from "../api/opsApi";
 import { opsApi } from "../api/opsApi";
+import {
+  DEBUG_STATE_UPDATED,
+  createOpsLiveSocket,
+} from "../api/opsLive";
 import { DebugControls } from "../components/DebugControls";
 import { EventDetail } from "../components/EventDetail";
 import { OrdersList } from "../components/OrdersList";
@@ -78,13 +82,16 @@ export function DebugPage({
   }
 
   useEffect(() => {
+    const socket = createOpsLiveSocket(accessToken);
+
     void refresh();
-
-    const interval = window.setInterval(() => {
+    socket.on(DEBUG_STATE_UPDATED, () => {
       void refresh();
-    }, 1500);
+    });
 
-    return () => window.clearInterval(interval);
+    return () => {
+      socket.disconnect();
+    };
   }, [accessToken]);
 
   return (
@@ -134,7 +141,7 @@ export function DebugPage({
           }
         />
 
-        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)]">
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.55fr)]">
           <OrdersList
             orders={state.orders}
             selectedOrderId={selectedOrderId}

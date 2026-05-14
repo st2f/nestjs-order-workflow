@@ -13,6 +13,7 @@ import {
   type TransactionRunner,
 } from '../../events/application/transaction-runner';
 import type { PaymentSucceededEventV1 } from '../../payments/contracts/events';
+import { broadcastDebugStateUpdated } from '../../shared/debug-state-updates';
 import { ENROLLMENT_FAILURE_COURSE_ID } from '../../shared/scenario-course-ids';
 import type {
   EnrollmentFailedEventV1,
@@ -49,7 +50,7 @@ export class ProcessPaymentSucceededService {
   async process(
     event: PaymentSucceededEventV1,
   ): Promise<ProcessPaymentSucceededResult> {
-    return this.transaction.run(async (tx) => {
+    const result = await this.transaction.run(async (tx) => {
       const markedProcessed = await this.processedEvents.markProcessed(
         event.eventId,
         CONSUMER_NAME,
@@ -127,5 +128,11 @@ export class ProcessPaymentSucceededService {
 
       return { processed: true, enrollment, created: true };
     });
+
+    if (result.created) {
+      broadcastDebugStateUpdated();
+    }
+
+    return result;
   }
 }

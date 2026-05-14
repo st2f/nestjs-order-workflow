@@ -11,7 +11,7 @@ enrollment, and refund compensation. The project is intentionally small: the
 goal is to make outbox publishing, duplicate-safe consumers, eventual
 consistency, and observable async behavior easy to inspect and test.
 
-<img width="1200" height="721" alt="image" src="https://github.com/user-attachments/assets/88ee3562-9aa4-4308-9187-f9db5479dd91" />
+<img width="2844" height="1490" alt="image" src="https://github.com/user-attachments/assets/26ea5001-3582-459b-861d-5e26010ce9de" />
 
 ## Repository Layout
 

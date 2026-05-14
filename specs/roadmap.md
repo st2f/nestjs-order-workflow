@@ -27,18 +27,23 @@
   - seeded hardcoded admin role
   - protected `/ops/*`
 - Add frontend login and protected debug route.
+- Replace dashboard polling with protected live invalidation:
+  - backend exposes Socket.IO namespace `/ops`
+  - connection requires admin JWT
+  - backend broadcasts `debug.state.updated`
+  - frontend refetches `GET /ops/debug` after each notification
+  - keep HTTP as the source of truth for dashboard state
+- Split ops debug responsibilities around the read-model spec:
+  - `DebugStateQueryService` builds `GET /ops/debug`
+  - `OutboxReplayService` owns outbox replay commands
+  - `OpsService` keeps scenario commands
+  - see `specs/ops-debug-read-model.md`
 
 ## Next
 
-1. Replace dashboard polling with protected live invalidation:
-   - backend exposes `WS /ops/live`
-   - connection requires admin JWT
-   - backend broadcasts `debug.state.updated`
-   - frontend refetches `GET /ops/debug` after each notification
-   - keep HTTP as the source of truth for dashboard state
-2. Add processed-events visibility to the debug UI.
-3. Make API response contracts explicit with DTOs where missing.
-4. Add targeted tests for live update behavior and frontend auth behavior.
+1. Add processed-events visibility to the debug UI.
+2. Make API response contracts explicit with DTOs where missing.
+3. Add targeted tests for live update behavior and frontend auth behavior.
 
 ## Later
 

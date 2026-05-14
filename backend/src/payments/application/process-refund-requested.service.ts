@@ -14,6 +14,7 @@ import {
   type TransactionRunner,
 } from '../../events/application/transaction-runner';
 import type { RefundSucceededEventV1 } from '../contracts/events';
+import { broadcastDebugStateUpdated } from '../../shared/debug-state-updates';
 import type { Payment } from '../entities/payment.entity';
 import { PaymentStatus } from '../payment-status.enum';
 import {
@@ -45,7 +46,7 @@ export class ProcessRefundRequestedService {
   async process(
     event: RefundRequestedEventV1,
   ): Promise<ProcessRefundRequestedResult> {
-    return this.transaction.run(async (tx) => {
+    const result = await this.transaction.run(async (tx) => {
       const markedProcessed = await this.processedEvents.markProcessed(
         event.eventId,
         CONSUMER_NAME,
@@ -97,6 +98,12 @@ export class ProcessRefundRequestedService {
         refunded: true,
       };
     });
+
+    if (result.refunded) {
+      broadcastDebugStateUpdated();
+    }
+
+    return result;
   }
 }
 

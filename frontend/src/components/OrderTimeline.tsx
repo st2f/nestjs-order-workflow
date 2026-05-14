@@ -1,4 +1,4 @@
-import type { TimelineEvent } from '../api/opsApi';
+import type { TimelineEvent } from "../api/opsApi";
 
 type OrderTimelineProps = {
   events: TimelineEvent[];

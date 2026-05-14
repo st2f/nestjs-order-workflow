@@ -14,6 +14,7 @@ import {
   OUTBOX_EVENT_REPOSITORY,
   type OutboxEventRepository,
 } from './outbox-event-repository';
+import { broadcastDebugStateUpdated } from '../../shared/debug-state-updates';
 
 @Injectable()
 export class OutboxPublisherService implements OnModuleInit, OnModuleDestroy {
@@ -72,20 +73,27 @@ export class OutboxPublisherService implements OnModuleInit, OnModuleDestroy {
 
     try {
       const events = await this.outbox.findUnpublished(this.batchSize);
+      let changedDebugState = false;
 
       // await Promise.all(events.map(...)) would be faster but less resilient - if one event fails to publish, the rest would be marked as failed and not retried until the next publish cycle
       for (const event of events) {
         try {
           await this.publisher.publish(event);
           await this.outbox.markPublished(event.id, new Date());
+          changedDebugState = true;
         } catch (error) {
           const publishError =
             error instanceof Error ? error : new Error(String(error));
           await this.outbox.markPublishFailed(event.id, publishError);
+          changedDebugState = true;
           this.logger.warn(
             `Failed to publish outbox event ${event.id}: ${publishError.message}`,
           );
         }
+      }
+
+      if (changedDebugState) {
+        broadcastDebugStateUpdated();
       }
     } finally {
       this.isPublishing = false;

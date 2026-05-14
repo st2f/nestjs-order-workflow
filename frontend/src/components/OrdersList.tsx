@@ -1,4 +1,4 @@
-import type { OrderSummary } from '../api/opsApi';
+import type { OrderSummary } from "../api/opsApi";
 
 type OrdersListProps = {
   orders: OrderSummary[];
@@ -33,15 +33,12 @@ export function OrdersList({
           </thead>
           <tbody className="divide-y divide-gray-100 text-sm">
             {orders.map((order) => (
-              <tr
-                key={order.id}
-                className="group"
-              >
+              <tr key={order.id} className="group">
                 <td
                   className={`px-4 py-3 sm:px-6 ${
                     selectedOrderId === order.id
-                      ? 'bg-emerald-50'
-                      : 'bg-white group-hover:bg-gray-50'
+                      ? "bg-emerald-50"
+                      : "bg-white group-hover:bg-gray-50"
                   }`}
                 >
                   <button
@@ -54,8 +51,8 @@ export function OrdersList({
                 <td
                   className={`break-all px-4 py-3 text-gray-600 sm:px-6 ${
                     selectedOrderId === order.id
-                      ? 'bg-emerald-50'
-                      : 'bg-white group-hover:bg-gray-50'
+                      ? "bg-emerald-50"
+                      : "bg-white group-hover:bg-gray-50"
                   }`}
                 >
                   {order.courseId}
@@ -63,8 +60,8 @@ export function OrdersList({
                 <td
                   className={`px-4 py-3 sm:px-6 ${
                     selectedOrderId === order.id
-                      ? 'bg-emerald-50'
-                      : 'bg-white group-hover:bg-gray-50'
+                      ? "bg-emerald-50"
+                      : "bg-white group-hover:bg-gray-50"
                   }`}
                 >
                   <strong
@@ -91,18 +88,18 @@ export function OrdersList({
 
 function statusClassName(status: string): string {
   switch (status) {
-    case 'COMPLETED':
-      return 'bg-emerald-50 text-emerald-800 ring-emerald-200';
-    case 'PAID':
-      return 'bg-blue-50 text-blue-800 ring-blue-200';
-    case 'REFUND_IN_PROGRESS':
-      return 'bg-amber-50 text-amber-800 ring-amber-200';
-    case 'REFUNDED':
-      return 'bg-slate-100 text-slate-700 ring-slate-200';
-    case 'PAYMENT_FAILED':
-    case 'FAILED':
-      return 'bg-red-50 text-red-800 ring-red-200';
+    case "COMPLETED":
+      return "bg-emerald-50 text-emerald-800 ring-emerald-200";
+    case "PAID":
+      return "bg-blue-50 text-blue-800 ring-blue-200";
+    case "REFUND_IN_PROGRESS":
+      return "bg-amber-50 text-amber-800 ring-amber-200";
+    case "REFUNDED":
+      return "bg-slate-100 text-slate-700 ring-slate-200";
+    case "PAYMENT_FAILED":
+    case "FAILED":
+      return "bg-red-50 text-red-800 ring-red-200";
     default:
-      return 'bg-gray-100 text-gray-700 ring-gray-200';
+      return "bg-gray-100 text-gray-700 ring-gray-200";
   }
 }

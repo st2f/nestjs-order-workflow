@@ -9,6 +9,7 @@ import type {
   PaymentFailedEventV1,
   PaymentSucceededEventV1,
 } from '../../payments/contracts/events';
+import { broadcastDebugStateUpdated } from '../../shared/debug-state-updates';
 import { OrderStatus } from '../order-status.enum';
 import { ORDER_REPOSITORY, type OrderRepository } from './order-repository';
 
@@ -37,7 +38,9 @@ export class ProcessPaymentEventService {
   async process(
     event: OrderPaymentEventV1,
   ): Promise<ProcessPaymentEventResult> {
-    return this.transaction.run(async (tx) => {
+    let statusChanged = false;
+
+    const result = await this.transaction.run(async (tx) => {
       const markedProcessed = await this.processedEvents.markProcessed(
         event.eventId,
         CONSUMER_NAME,
@@ -56,13 +59,20 @@ export class ProcessPaymentEventService {
 
       const nextStatus = statusForPaymentEvent(event);
       assertTransitionAllowed(order.status, nextStatus);
+      statusChanged = order.status !== nextStatus;
 
-      if (order.status !== nextStatus) {
+      if (statusChanged) {
         await this.orders.updateStatus(order.id, nextStatus, tx);
       }
 
       return { processed: true, status: nextStatus };
     });
+
+    if (statusChanged) {
+      broadcastDebugStateUpdated();
+    }
+
+    return result;
   }
 }
 

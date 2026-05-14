@@ -4,6 +4,7 @@ import { OUTBOX_EVENT_REPOSITORY } from '../../events/application/outbox-event-r
 import type { OutboxEventRepository } from '../../events/application/outbox-event-repository';
 import { TRANSACTION_RUNNER } from '../../events/application/transaction-runner';
 import type { TransactionRunner } from '../../events/application/transaction-runner';
+import { broadcastDebugStateUpdated } from '../../shared/debug-state-updates';
 import { OrderCreatedEventV1 } from '../contracts/events';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { Order } from '../entities/order.entity';
@@ -27,7 +28,7 @@ export class CreateOrderService {
   ) {}
 
   async create(command: CreateOrderCommand): Promise<Order> {
-    return this.transaction.run(async (tx) => {
+    const order = await this.transaction.run(async (tx) => {
       const order = await this.orders.create(
         {
           userId: command.userId,
@@ -57,5 +58,9 @@ export class CreateOrderService {
 
       return order;
     });
+
+    broadcastDebugStateUpdated();
+
+    return order;
   }
 }

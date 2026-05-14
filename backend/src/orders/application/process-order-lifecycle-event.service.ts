@@ -17,6 +17,7 @@ import {
   type TransactionRunner,
 } from '../../events/application/transaction-runner';
 import type { RefundSucceededEventV1 } from '../../payments/contracts/events';
+import { broadcastDebugStateUpdated } from '../../shared/debug-state-updates';
 import type { RefundRequestedEventV1 } from '../contracts/events';
 import { OrderStatus } from '../order-status.enum';
 import { ORDER_REPOSITORY, type OrderRepository } from './order-repository';
@@ -50,7 +51,9 @@ export class ProcessOrderLifecycleEventService {
   async process(
     event: OrderLifecycleEventV1,
   ): Promise<ProcessOrderLifecycleEventResult> {
-    return this.transaction.run(async (tx) => {
+    let changedDebugState = false;
+
+    const result = await this.transaction.run(async (tx) => {
       const markedProcessed = await this.processedEvents.markProcessed(
         event.eventId,
         CONSUMER_NAME,
@@ -74,6 +77,7 @@ export class ProcessOrderLifecycleEventService {
 
       if (statusChanged) {
         await this.orders.updateStatus(order.id, nextStatus, tx);
+        changedDebugState = true;
       }
 
       if (event.eventType === 'enrollment.failed' && statusChanged) {
@@ -90,6 +94,7 @@ export class ProcessOrderLifecycleEventService {
         };
 
         await this.outbox.append(refundRequestedEvent, tx);
+        changedDebugState = true;
 
         return {
           processed: true,
@@ -100,6 +105,12 @@ export class ProcessOrderLifecycleEventService {
 
       return { processed: true, status: nextStatus };
     });
+
+    if (changedDebugState) {
+      broadcastDebugStateUpdated();
+    }
+
+    return result;
   }
 }
 

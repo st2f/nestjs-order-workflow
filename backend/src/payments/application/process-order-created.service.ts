@@ -5,6 +5,7 @@ import type { OutboxEventRepository } from '../../events/application/outbox-even
 import { TRANSACTION_RUNNER } from '../../events/application/transaction-runner';
 import type { TransactionRunner } from '../../events/application/transaction-runner';
 import type { OrderCreatedEventV1 } from '../../orders/contracts/events';
+import { broadcastDebugStateUpdated } from '../../shared/debug-state-updates';
 import { PAYMENT_FAILURE_COURSE_ID } from '../../shared/scenario-course-ids';
 import type {
   PaymentFailedEventV1,
@@ -36,7 +37,7 @@ export class ProcessOrderCreatedService {
   async process(
     event: OrderCreatedEventV1,
   ): Promise<ProcessOrderCreatedResult> {
-    return this.transaction.run(async (tx) => {
+    const result = await this.transaction.run(async (tx) => {
       const existingPayment = await this.payments.findByOrderId(
         event.data.orderId,
         tx,
@@ -103,5 +104,11 @@ export class ProcessOrderCreatedService {
 
       return { payment, created: true };
     });
+
+    if (result.created) {
+      broadcastDebugStateUpdated();
+    }
+
+    return result;
   }
 }
