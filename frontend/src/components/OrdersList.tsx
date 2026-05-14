@@ -94,8 +94,6 @@ function statusClassName(status: string): string {
     case 'COMPLETED':
       return 'bg-emerald-50 text-emerald-800 ring-emerald-200';
     case 'PAID':
-    case 'PAYMENT_IN_PROGRESS':
-    case 'ENROLLMENT_IN_PROGRESS':
       return 'bg-blue-50 text-blue-800 ring-blue-200';
     case 'REFUND_IN_PROGRESS':
       return 'bg-amber-50 text-amber-800 ring-amber-200';
