@@ -15,20 +15,24 @@
 - Processed-event idempotency guards.
 - Debug endpoints for scenarios, outbox republish, and dashboard data.
 - React/Vite debug UI calling real backend endpoints.
+- Frontend formalized as a separate HTTP-only service:
+  - local Vite `/api` proxy kept for development
+  - frontend Docker image serves the React build through nginx
+  - nginx proxies `/api/*` to the backend container
+  - `docker-compose.app.yml` adds backend and frontend services
 
 ## Next
 
-1. Formalize the frontend as a separate HTTP-only service in code and deployment docs.
-2. Add simple admin login:
+1. Add simple admin login:
    - `POST /auth/login`
    - Passport local strategy
    - Passport JWT strategy
    - seeded hardcoded admin role
    - protected `/ops/*`
-3. Add frontend login and protected debug route.
-4. Add processed-events visibility to the debug UI.
-5. Make API response contracts explicit with DTOs where missing.
-6. Add targeted tests for auth, protected ops routes, and frontend auth behavior.
+2. Add frontend login and protected debug route.
+3. Add processed-events visibility to the debug UI.
+4. Make API response contracts explicit with DTOs where missing.
+5. Add targeted tests for auth, protected ops routes, and frontend auth behavior.
 
 ## Later
 

@@ -38,8 +38,19 @@ Vite proxy /api -> http://localhost:3000
 Sandbox/deployment:
 
 ```txt
-Browser -> frontend service
-frontend service -> backend /api over HTTP
+Browser -> frontend nginx container
+frontend nginx container -> backend container over /api
+```
+
+The nginx frontend service serves the built React app and proxies `/api/*` to
+the backend service. This keeps the browser entrypoint on the frontend while
+preserving the HTTP-only frontend/backend boundary.
+
+Compose commands:
+
+```bash
+docker compose up -d
+docker compose -f docker-compose.yml -f docker-compose.app.yml up --build
 ```
 
 ## Authentication UX

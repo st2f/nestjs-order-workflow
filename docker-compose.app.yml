@@ -1,0 +1,41 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: orderflow
+      DB_PASSWORD: orderflow
+      DB_NAME: orderflow
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: orderflow
+      RABBITMQ_PASSWORD: orderflow
+      RABBITMQ_MANAGEMENT_URL: http://rabbitmq:15672
+      RABBITMQ_EXCHANGE: orderflow.events
+      OUTBOX_PUBLISHER_ENABLED: 'true'
+      OUTBOX_PUBLISHER_POLL_INTERVAL_MS: 1000
+      OUTBOX_PUBLISHER_BATCH_SIZE: 20
+      RABBITMQ_CONSUMERS_ENABLED: 'true'
+      RABBITMQ_PAYMENTS_ORDER_CREATED_QUEUE: payments.order-created.v1
+      RABBITMQ_ORDERS_PAYMENT_EVENTS_QUEUE: orders.payment-events.v1
+      RABBITMQ_ORDERS_LIFECYCLE_EVENTS_QUEUE: orders.lifecycle-events.v1
+      RABBITMQ_ENROLLMENTS_PAYMENT_SUCCEEDED_QUEUE: enrollments.payment-succeeded.v1
+      RABBITMQ_PAYMENTS_REFUND_REQUESTED_QUEUE: payments.refund-requested.v1
+      TYPEORM_SYNCHRONIZE: 'true'
+      TYPEORM_LOGGING: 'false'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - '8080:80'

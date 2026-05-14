@@ -24,6 +24,8 @@ Start with [specs/README.md](specs/README.md) for the complete spec map.
 
 ## Quick Start
 
+### Infrastructure-only local development
+
 Start local infrastructure:
 
 ```bash
@@ -51,6 +53,20 @@ npm run dev
 
 The frontend listens on `http://localhost:5173`. Vite proxies `/api` requests
 to the backend during local development.
+
+### Full app stack
+
+Build and run infrastructure, backend, and frontend containers:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.app.yml up --build
+```
+
+Open the frontend at `http://localhost:8080`.
+
+In this shape, the browser calls the frontend container. Frontend nginx serves
+the React build and proxies `/api/*` to the backend container over the Compose
+network.
 
 ## Try the API
 
