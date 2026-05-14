@@ -5,7 +5,9 @@ import * as Joi from 'joi';
 import './database/serialize-postgres-query-runner';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import appConfig from './config/app.config';
+import authConfig from './config/auth.config';
 import databaseConfig from './config/database.config';
 import rabbitmqConfig from './config/rabbitmq.config';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
@@ -20,9 +22,13 @@ import { PaymentsModule } from './payments/payments.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
-      load: [appConfig, databaseConfig, rabbitmqConfig],
+      load: [appConfig, authConfig, databaseConfig, rabbitmqConfig],
       validationSchema: Joi.object({
         PORT: Joi.number().port().default(3000),
+        ADMIN_USERNAME: Joi.string().default('admin'),
+        ADMIN_PASSWORD: Joi.string().default('orderflow-admin'),
+        JWT_SECRET: Joi.string().min(16).default('dev-only-change-me'),
+        JWT_EXPIRES_IN: Joi.string().default('1h'),
         DB_HOST: Joi.string().required(),
         DB_PORT: Joi.number().port().required(),
         DB_USERNAME: Joi.string().required(),
@@ -86,6 +92,7 @@ import { PaymentsModule } from './payments/payments.module';
     PaymentsModule,
     EnrollmentsModule,
     EventsModule,
+    AuthModule,
     OpsModule,
     NotificationsModule,
   ],

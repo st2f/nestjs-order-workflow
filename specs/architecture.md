@@ -1,14 +1,15 @@
 # Architecture
 
 OrderFlow demonstrates an event-driven purchase workflow with a backend service,
-a separate HTTP-only frontend service, Postgres, and RabbitMQ.
+a separate frontend service, Postgres, and RabbitMQ.
 
 ## System Shape
 
 ```txt
 Browser
   -> frontend service
-      -> calls backend HTTP APIs only
+      -> calls backend APIs through HTTP
+      -> later listens to one backend WebSocket invalidation channel
 
 Backend service
   -> public API
@@ -30,6 +31,7 @@ Owns:
 
 - screens and presentation state
 - HTTP API client code
+- later: one WebSocket client for ops live invalidation
 
 Must not:
 
@@ -37,7 +39,8 @@ Must not:
 
 May:
 
-- call backend HTTP APIs
+- call backend HTTP APIs for state and commands
+- connect to the protected `/ops/live` WebSocket for invalidation notifications
 
 Detailed frontend boundary, screens, auth behavior, and tests live in
 [frontend.md](frontend.md).
@@ -46,7 +49,7 @@ Detailed frontend boundary, screens, auth behavior, and tests live in
 
 Owns:
 
-- HTTP API contracts
+- HTTP and WebSocket API contracts
 - authentication and authorization
 - order, payment, enrollment, notification, event, and ops modules
 - database writes
@@ -58,7 +61,7 @@ Owns:
 
 - Postgres stores backend-owned state.
 - RabbitMQ transports domain events.
-- The frontend has no infrastructure dependency except HTTP access to the backend.
+- The frontend has no infrastructure dependency except backend API access.
 
 ## Backend Modules
 

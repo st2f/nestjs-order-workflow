@@ -36,6 +36,7 @@ Test:
 - `LocalStrategy` validates username/password
 - `JwtStrategy` validates token payload
 - `/ops/*` rejects missing or invalid JWT
+- `/ops/live` rejects missing or invalid JWT during connection
 - role guard allows seeded `admin`
 
 ### Database integration
@@ -64,8 +65,10 @@ Test:
 
 - login form calls `POST /api/auth/login`
 - JWT is attached to protected ops calls
+- live update client sends the JWT when connecting
 - auth failure returns to login
 - dashboard renders from `/api/ops/debug` fixture data
+- dashboard refetches `/api/ops/debug` after `debug.state.updated`
 - scenario buttons call the correct ops endpoints
 - outbox republish button calls `POST /api/ops/outbox/:id/republish`
 

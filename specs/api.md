@@ -1,7 +1,8 @@
-# HTTP API
+# Backend API
 
-The backend is the only HTTP API provider. The frontend and ops/debug UI call
-these endpoints over HTTP; they never read backend state directly.
+The backend is the only API provider. The frontend and ops/debug UI use HTTP for
+state and commands, and one protected WebSocket for live invalidation
+notifications. They never read backend state directly.
 
 ## Auth
 
@@ -14,7 +15,7 @@ Request:
 ```json
 {
   "username": "admin",
-  "password": "development-password"
+  "password": "orderflow-admin"
 }
 ```
 
@@ -31,7 +32,7 @@ Response:
 }
 ```
 
-Implementation target:
+Implementation:
 
 - `AuthController`
 - Passport `LocalStrategy` for username/password validation
@@ -78,8 +79,8 @@ All `/ops/*` endpoints require an admin JWT:
 Authorization: Bearer <accessToken>
 ```
 
-V1 may temporarily support `X-Ops-Api-Key` for local development, but the target
-shape is admin JWT protection.
+HTTP remains the canonical source of dashboard state. The WebSocket channel is
+only a live invalidation signal that tells the frontend to refetch HTTP state.
 
 ### `GET /ops/debug`
 
@@ -118,12 +119,69 @@ Rules:
 - must not mutate domain state directly
 - should return the republished event metadata
 
+## Ops Live Updates
+
+### `WS /ops/live`
+
+Protected WebSocket endpoint used by the debug dashboard.
+
+Authentication:
+
+- client sends the admin JWT during connection
+- backend accepts only authenticated users with the `admin` role
+- unauthenticated or non-admin clients are rejected during the handshake
+
+Recommended browser connection shape:
+
+```txt
+ws://localhost:5173/api/ops/live?token=<accessToken>
+```
+
+In the container/nginx shape, the browser still connects through the frontend
+entrypoint:
+
+```txt
+ws://localhost:8080/api/ops/live?token=<accessToken>
+```
+
+The frontend nginx proxy must forward WebSocket upgrade requests under `/api/*`
+to the backend.
+
+Server message:
+
+```json
+{
+  "type": "debug.state.updated",
+  "occurredAt": "iso-date",
+  "reason": "order.status.changed"
+}
+```
+
+Allowed reasons:
+
+- `scenario.created`
+- `order.status.changed`
+- `outbox.published`
+- `outbox.failed`
+- `processed-event.recorded`
+- `outbox.republished`
+
+Client behavior:
+
+1. connect after login
+2. receive `debug.state.updated`
+3. call `GET /ops/debug`
+4. render the refreshed HTTP response
+
+Do not push the full dashboard payload through WebSocket in V1.
+
 ## API Client Rules
 
 Frontend API clients should:
 
 - live under `frontend/src/api/`
-- use HTTP only
+- use HTTP for state and commands
+- use WebSocket only for `/ops/live` invalidation notifications
 - keep auth token handling in one place
 - attach `Authorization: Bearer <token>` for protected ops calls
 - expose typed functions to pages/components

@@ -6,7 +6,8 @@ state.
 
 ## Boundary
 
-The frontend must only integrate through backend HTTP APIs.
+The frontend must use HTTP APIs for state and commands. It may also use one
+protected WebSocket endpoint for live invalidation notifications.
 
 It must not:
 
@@ -25,6 +26,7 @@ It may:
 - login through `POST /auth/login`
 - store the JWT in browser state/storage appropriate for the demo
 - attach the JWT to protected ops calls
+- connect to `/api/ops/live` after login for live update notifications
 
 ## Runtime
 
@@ -44,7 +46,7 @@ frontend nginx container -> backend container over /api
 
 The nginx frontend service serves the built React app and proxies `/api/*` to
 the backend service. This keeps the browser entrypoint on the frontend while
-preserving the HTTP-only frontend/backend boundary.
+preserving the frontend/backend API boundary.
 
 Compose commands:
 
@@ -64,6 +66,7 @@ V1 login:
 - stores returned JWT
 - redirects to debug dashboard after success
 - sends `Authorization: Bearer <token>` on `/api/ops/*`
+- sends the JWT when connecting to `/api/ops/live`
 - clears token on logout or auth failure
 
 The seeded user is an admin role. Do not build user management in V1.
@@ -91,10 +94,30 @@ Purpose:
 Uses:
 
 - `GET /api/ops/debug`
+- `WS /api/ops/live`
 - `POST /api/ops/scenarios/order-success`
 - `POST /api/ops/scenarios/payment-failure`
 - `POST /api/ops/scenarios/enrollment-failure`
 - `POST /api/ops/outbox/:id/republish`
+
+Live update rule:
+
+- HTTP remains the source of truth for dashboard state.
+- WebSocket messages are invalidation notifications only.
+- On `debug.state.updated`, refetch `GET /api/ops/debug`.
+- Do not poll every second once `/ops/live` is implemented.
+- Keep a manual refresh or reconnect fallback for connection loss.
+
+Expected flow:
+
+```txt
+scenario button click
+  -> HTTP POST /api/ops/scenarios/order-success
+  -> backend changes state and writes events
+  -> backend broadcasts debug.state.updated
+  -> frontend receives notification
+  -> frontend calls GET /api/ops/debug
+```
 
 ### Controls
 
@@ -147,6 +170,7 @@ frontend/
     api/
       authApi.ts
       opsApi.ts
+      opsLive.ts
     pages/
       LoginPage.tsx
       DebugPage.tsx
@@ -164,6 +188,8 @@ frontend/
 ## Testing Expectations
 
 - API clients use mocked HTTP responses.
+- Live update client uses a mocked WebSocket.
 - Protected route behavior is tested without a real backend.
 - Dashboard rendering is tested from API-shaped fixtures.
+- Dashboard refetches debug state after `debug.state.updated`.
 - No frontend test should require Postgres, RabbitMQ, or Nest internals.

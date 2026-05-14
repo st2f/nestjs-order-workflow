@@ -12,21 +12,26 @@ boundary, not a production user-management system.
 
 ## Seeded Admin
 
-Use one hardcoded seeded admin identity:
+V1 uses one seeded admin identity. The user ID and role are fixed in
+`AuthService`; the username and password come from environment variables.
 
 ```ts
-const SEEDED_ADMIN = {
-  id: 'seed-admin',
-  username: 'admin',
-  roles: ['admin'] as const,
+type AuthenticatedUser = {
+  id: 'seed-admin';
+  username: string;
+  roles: ['admin'];
 };
 ```
 
-Password handling:
+Current local defaults:
 
-- prefer a password hash or development password from environment
-- never commit a real secret
-- acceptable V1 env names: `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `JWT_SECRET`
+- `ADMIN_USERNAME=admin`
+- `ADMIN_PASSWORD=orderflow-admin`
+- `JWT_SECRET=dev-only-change-me`
+- `JWT_EXPIRES_IN=1h`
+
+These defaults are for local/demo use only. Never reuse them in a shared or
+production-like environment.
 
 ## Backend Components
 
@@ -72,7 +77,7 @@ Request:
 ```json
 {
   "username": "admin",
-  "password": "development-password"
+  "password": "orderflow-admin"
 }
 ```
 
@@ -109,16 +114,20 @@ Public:
 Protected:
 
 - `GET /ops/debug`
+- `WS /ops/live`
 - `POST /ops/scenarios/order-success`
 - `POST /ops/scenarios/payment-failure`
 - `POST /ops/scenarios/enrollment-failure`
 - `POST /ops/outbox/:id/republish`
 
-All protected routes require:
+Protected HTTP routes require:
 
 ```txt
 Authorization: Bearer <accessToken>
 ```
+
+The protected WebSocket endpoint must validate the same JWT during connection
+and reject non-admin clients before accepting the socket.
 
 ## Frontend Behavior
 
@@ -126,6 +135,7 @@ Authorization: Bearer <accessToken>
 - call `POST /api/auth/login`
 - store the token for the demo session
 - attach `Authorization: Bearer <token>` on `/api/ops/*`
+- send the token when connecting to `/api/ops/live`
 - clear token on logout or `401`
 - redirect back to login when unauthenticated
 
@@ -137,11 +147,14 @@ Backend:
 - login fails for invalid credentials
 - JWT strategy accepts valid token payload
 - `/ops/*` rejects missing/invalid JWT
+- `/ops/live` rejects missing/invalid JWT during connection
 - admin role can access `/ops/*`
+- admin role can connect to `/ops/live`
 
 Frontend:
 
 - login form calls auth API
 - successful login opens debug dashboard
 - protected ops calls include bearer token
+- live update connection includes token
 - `401` clears auth state and returns to login

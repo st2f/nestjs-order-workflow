@@ -1,4 +1,7 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { OpsService } from './ops.service';
 import type {
   DebugStateDto,
@@ -7,6 +10,8 @@ import type {
 } from './ops.dto';
 
 @Controller('ops')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
 export class OpsController {
   constructor(private readonly ops: OpsService) {}
 
