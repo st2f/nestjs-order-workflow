@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { LogOut } from "lucide-react";
 import type { DebugState, OrderSummary, OutboxEvent } from "../api/opsApi";
 import { opsApi } from "../api/opsApi";
 import { DebugControls } from "../components/DebugControls";
@@ -13,7 +14,17 @@ const emptyState: DebugState = {
   outbox: [],
 };
 
-export function DebugPage() {
+type DebugPageProps = {
+  accessToken: string;
+  userLabel: string;
+  onLogout: () => void;
+};
+
+export function DebugPage({
+  accessToken,
+  userLabel,
+  onLogout,
+}: DebugPageProps) {
   const [state, setState] = useState<DebugState>(emptyState);
   const [selectedOrderId, setSelectedOrderId] = useState<string>();
   const [selectedEvent, setSelectedEvent] = useState<OutboxEvent>();
@@ -31,7 +42,7 @@ export function DebugPage() {
   async function refresh() {
     try {
       setError(undefined);
-      const nextState = await opsApi.getDebugState();
+      const nextState = await opsApi.getDebugState(accessToken);
       setState(nextState);
       setSelectedOrderId((current) => current ?? nextState.selectedOrderId);
     } catch (err) {
@@ -57,7 +68,7 @@ export function DebugPage() {
   async function republish(eventId: string) {
     setBusy(true);
     try {
-      await opsApi.republishOutboxEvent(eventId);
+      await opsApi.republishOutboxEvent(accessToken, eventId);
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Re-publish failed");
@@ -74,7 +85,7 @@ export function DebugPage() {
     }, 1500);
 
     return () => window.clearInterval(interval);
-  }, []);
+  }, [accessToken]);
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8 text-gray-900 sm:px-6 lg:px-8">
@@ -87,20 +98,39 @@ export function DebugPage() {
             Workflow scenarios, timelines, outbox replay.
           </p>
         </div>
-        {error && (
-          <p className="max-w-xl rounded-md border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-600">
-            {error}
-          </p>
-        )}
+        <div className="flex flex-col gap-3 sm:items-end">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-600">
+              {userLabel}
+            </span>
+            <button
+              className="inline-flex min-h-10 items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm ring-1 ring-gray-300 transition hover:bg-gray-50"
+              onClick={onLogout}
+              type="button"
+            >
+              <LogOut size={18} aria-hidden="true" />
+              Sign out
+            </button>
+          </div>
+          {error && (
+            <p className="max-w-xl rounded-md border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-600">
+              {error}
+            </p>
+          )}
+        </div>
       </header>
 
       <div className="mx-auto max-w-7xl">
         <DebugControls
           busy={busy}
-          onSuccess={() => runScenario(opsApi.createOrderSuccess)}
-          onPaymentFailure={() => runScenario(opsApi.createOrderPaymentFailure)}
+          onSuccess={() =>
+            runScenario(() => opsApi.createOrderSuccess(accessToken))
+          }
+          onPaymentFailure={() =>
+            runScenario(() => opsApi.createOrderPaymentFailure(accessToken))
+          }
           onEnrollmentFailure={() =>
-            runScenario(opsApi.createOrderEnrollmentFailure)
+            runScenario(() => opsApi.createOrderEnrollmentFailure(accessToken))
           }
         />
 

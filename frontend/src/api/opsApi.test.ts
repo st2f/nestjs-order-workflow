@@ -18,14 +18,16 @@ describe('opsApi', () => {
       ),
     );
 
-    await expect(opsApi.getDebugState()).resolves.toEqual({
+    await expect(opsApi.getDebugState('token-1')).resolves.toEqual({
       orders: [],
       timeline: [],
       outbox: [],
     });
 
     expect(fetchMock).toHaveBeenCalledWith('/api/ops/debug', {
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: 'Bearer token-1',
+      },
     });
   });
 
@@ -41,10 +43,12 @@ describe('opsApi', () => {
       ),
     );
 
-    await opsApi.createOrderSuccess();
+    await opsApi.createOrderSuccess('token-1');
 
     expect(fetchMock).toHaveBeenCalledWith('/api/ops/scenarios/order-success', {
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: 'Bearer token-1',
+      },
       method: 'POST',
     });
   });

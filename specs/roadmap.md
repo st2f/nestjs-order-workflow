@@ -26,19 +26,19 @@
   - Passport JWT strategy
   - seeded hardcoded admin role
   - protected `/ops/*`
+- Add frontend login and protected debug route.
 
 ## Next
 
-1. Add frontend login and protected debug route.
-2. Replace dashboard polling with protected live invalidation:
+1. Replace dashboard polling with protected live invalidation:
    - backend exposes `WS /ops/live`
    - connection requires admin JWT
    - backend broadcasts `debug.state.updated`
    - frontend refetches `GET /ops/debug` after each notification
    - keep HTTP as the source of truth for dashboard state
-3. Add processed-events visibility to the debug UI.
-4. Make API response contracts explicit with DTOs where missing.
-5. Add targeted tests for live update behavior and frontend auth behavior.
+2. Add processed-events visibility to the debug UI.
+3. Make API response contracts explicit with DTOs where missing.
+4. Add targeted tests for live update behavior and frontend auth behavior.
 
 ## Later
 

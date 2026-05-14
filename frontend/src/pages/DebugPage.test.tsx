@@ -19,13 +19,22 @@ describe('DebugPage', () => {
       ),
     );
 
-    render(<DebugPage />);
+    render(
+      <DebugPage
+        accessToken="token-1"
+        userLabel="admin"
+        onLogout={() => undefined}
+      />,
+    );
 
     expect(
       screen.getByRole('heading', { name: /orderflow debug/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /create success/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /sign out/i }),
     ).toBeInTheDocument();
     expect(await screen.findByText(/no orders yet/i)).toBeInTheDocument();
   });
