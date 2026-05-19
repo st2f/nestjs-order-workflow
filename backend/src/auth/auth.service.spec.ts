@@ -3,11 +3,13 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
+  const validPassword = 'valid-login-input';
+  const invalidPassword = 'invalid-login-input';
   const config = {
     getOrThrow: vi.fn((key: string) => {
       const values: Record<string, string> = {
         'auth.adminUsername': 'admin',
-        'auth.adminPassword': 'secret-password',
+        'auth.adminPassword': validPassword,
       };
 
       return values[key];
@@ -27,9 +29,7 @@ describe('AuthService', () => {
       jwt as unknown as JwtService,
     );
 
-    expect(
-      service.validateAdminCredentials('admin', 'secret-password'),
-    ).toEqual({
+    expect(service.validateAdminCredentials('admin', validPassword)).toEqual({
       id: 'seed-admin',
       username: 'admin',
       roles: ['admin'],
@@ -43,7 +43,7 @@ describe('AuthService', () => {
     );
 
     expect(() =>
-      service.validateAdminCredentials('admin', 'wrong-password'),
+      service.validateAdminCredentials('admin', invalidPassword),
     ).toThrow(UnauthorizedException);
   });
 

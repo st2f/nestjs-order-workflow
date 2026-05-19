@@ -14,8 +14,8 @@ Request:
 
 ```json
 {
-  "username": "admin",
-  "password": "orderflow-admin"
+  "username": "<admin-username>",
+  "password": "<admin-password>"
 }
 ```
 
@@ -26,7 +26,7 @@ Response:
   "accessToken": "jwt",
   "user": {
     "id": "seed-admin",
-    "username": "admin",
+    "username": "<admin-username>",
     "roles": ["admin"]
   }
 }

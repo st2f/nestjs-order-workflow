@@ -23,15 +23,15 @@ type AuthenticatedUser = {
 };
 ```
 
-Current local defaults:
+Required environment variables:
 
-- `ADMIN_USERNAME=admin`
-- `ADMIN_PASSWORD=orderflow-admin`
-- `JWT_SECRET=dev-only-change-me`
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+- `JWT_SECRET`
 - `JWT_EXPIRES_IN=1h`
 
-These defaults are for local/demo use only. Never reuse them in a shared or
-production-like environment.
+Do not commit concrete credential values. Keep local values in ignored `.env`
+files or in deployment secret storage.
 
 ## Backend Components
 
@@ -76,8 +76,8 @@ Request:
 
 ```json
 {
-  "username": "admin",
-  "password": "orderflow-admin"
+  "username": "<admin-username>",
+  "password": "<admin-password>"
 }
 ```
 
@@ -88,7 +88,7 @@ Response:
   "accessToken": "jwt",
   "user": {
     "id": "seed-admin",
-    "username": "admin",
+    "username": "<admin-username>",
     "roles": ["admin"]
   }
 }

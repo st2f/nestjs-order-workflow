@@ -46,8 +46,11 @@ describe('App', () => {
 
     render(<App />);
 
+    fireEvent.change(screen.getByLabelText(/username/i), {
+      target: { value: 'admin' },
+    });
     fireEvent.change(screen.getByLabelText(/password/i), {
-      target: { value: 'orderflow-admin' },
+      target: { value: 'test-password' },
     });
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
 

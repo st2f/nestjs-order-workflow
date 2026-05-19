@@ -4,19 +4,19 @@ services:
       context: ./backend
     environment:
       PORT: 3000
-      ADMIN_USERNAME: admin
-      ADMIN_PASSWORD: orderflow-admin
-      JWT_SECRET: dev-only-change-me
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?Set ADMIN_USERNAME for local Compose}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD for local Compose}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET for local Compose}
       JWT_EXPIRES_IN: 1h
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USERNAME: orderflow
-      DB_PASSWORD: orderflow
-      DB_NAME: orderflow
+      DB_USERNAME: ${POSTGRES_USER:?Set POSTGRES_USER for local Compose}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD for local Compose}
+      DB_NAME: ${POSTGRES_DB:?Set POSTGRES_DB for local Compose}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USERNAME: orderflow
-      RABBITMQ_PASSWORD: orderflow
+      RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:?Set RABBITMQ_DEFAULT_USER for local Compose}
+      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:?Set RABBITMQ_DEFAULT_PASS for local Compose}
       RABBITMQ_MANAGEMENT_URL: http://rabbitmq:15672
       RABBITMQ_EXCHANGE: orderflow.events
       OUTBOX_PUBLISHER_ENABLED: 'true'

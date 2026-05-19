@@ -25,9 +25,9 @@ import { PaymentsModule } from './payments/payments.module';
       load: [appConfig, authConfig, databaseConfig, rabbitmqConfig],
       validationSchema: Joi.object({
         PORT: Joi.number().port().default(3000),
-        ADMIN_USERNAME: Joi.string().default('admin'),
-        ADMIN_PASSWORD: Joi.string().default('orderflow-admin'),
-        JWT_SECRET: Joi.string().min(16).default('dev-only-change-me'),
+        ADMIN_USERNAME: Joi.string().required(),
+        ADMIN_PASSWORD: Joi.string().required(),
+        JWT_SECRET: Joi.string().min(16).required(),
         JWT_EXPIRES_IN: Joi.string().default('1h'),
         DB_HOST: Joi.string().required(),
         DB_PORT: Joi.number().port().required(),

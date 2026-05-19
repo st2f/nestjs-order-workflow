@@ -1,11 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { config as loadEnvFile } from 'dotenv';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
-import { AppModule } from './../src/app.module';
 import { OutboxEvent } from './../src/events/entities/outbox-event.entity';
 import { Order } from './../src/orders/entities/order.entity';
 import { OrderStatus } from './../src/orders/order-status.enum';
@@ -181,12 +180,7 @@ describe('Backend smoke tests (e2e)', () => {
 });
 
 async function ensureTestDatabase() {
-  loadEnvFile({
-    path: '.env.test',
-    quiet: true,
-  });
-
-  const database = process.env.DB_NAME;
+  const database = getRequiredEnv('DB_NAME');
 
   if (!database || !isSafeTestDatabaseName(database)) {
     throw new Error(
@@ -196,10 +190,10 @@ async function ensureTestDatabase() {
 
   const maintenanceDataSource = new DataSource({
     type: 'postgres',
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
+    host: getRequiredEnv('DB_HOST'),
+    port: Number(getRequiredEnv('DB_PORT')),
+    username: getRequiredEnv('DB_USERNAME'),
+    password: getRequiredEnv('DB_PASSWORD'),
     database: database,
   });
 
@@ -240,4 +234,16 @@ async function clearDatabase(dataSource: DataSource) {
 
 function isSafeTestDatabaseName(database: string) {
   return /^[a-zA-Z0-9_]+$/.test(database) && database.includes('test');
+}
+
+function getRequiredEnv(name: string) {
+  const value = process.env[name];
+
+  if (!value?.trim()) {
+    throw new Error(
+      `Missing ${name}. Run "cp .env.test.example .env.test" in backend, then fill it before running npm run test:e2e.`,
+    );
+  }
+
+  return value;
 }

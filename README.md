@@ -26,6 +26,14 @@ Start with [specs/README.md](specs/README.md) for the complete spec map.
 
 ### Infrastructure-only local development
 
+Create local Compose credentials:
+
+```bash
+cp .env.example .env
+```
+
+Fill every blank value in `.env`. Docker Compose reads this file automatically.
+
 Start local infrastructure:
 
 ```bash
@@ -40,6 +48,9 @@ cp .env.example .env
 npm install
 npm run start:dev
 ```
+
+Fill every blank value in `backend/.env`; use the same Postgres and RabbitMQ
+values you put in the root `.env`.
 
 The backend listens on `http://localhost:3000`.
 
@@ -56,10 +67,18 @@ to the backend during local development.
 
 ### Full app stack
 
+Create local Compose credentials if you have not already:
+
+```bash
+cp .env.example .env
+```
+
+Fill every blank value in `.env`. Docker Compose reads this file automatically.
+
 Build and run infrastructure, backend, and frontend containers:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.app.yml up --build
+docker compose -f docker-compose.yml -f docker-compose.app.yml up -d --build
 ```
 
 Open the frontend at `http://localhost:8080`.
@@ -85,8 +104,8 @@ curl -X POST http://localhost:3000/orders \
 RabbitMQ management UI:
 
 - URL: `http://localhost:15672`
-- Username: `orderflow`
-- Password: `orderflow`
+- Username: value of `RABBITMQ_DEFAULT_USER` in your root `.env`
+- Password: value of `RABBITMQ_DEFAULT_PASS` in your root `.env`
 
 ## Verification
 
@@ -111,7 +130,11 @@ Run backend e2e tests when Postgres is available:
 
 ```bash
 cd backend
+cp .env.test.example .env.test
 npm run test:e2e
 ```
 
-The e2e suite uses a separate `orderflow_test` database by default.
+Before running e2e tests, fill `DB_USERNAME` and `DB_PASSWORD` in
+`backend/.env.test` with the same Postgres credentials as your local
+infrastructure. The e2e suite uses a separate `orderflow_test` database by
+default.

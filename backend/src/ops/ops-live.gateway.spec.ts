@@ -1,10 +1,15 @@
+import { Logger } from '@nestjs/common';
 import type { JwtService } from '@nestjs/jwt';
 import type { Server, Socket } from 'socket.io';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { broadcastDebugStateUpdated } from '../shared/debug-state-updates';
 import { OpsLiveGateway } from './ops-live.gateway';
 
 describe('OpsLiveGateway', () => {
+  beforeEach(() => {
+    vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
