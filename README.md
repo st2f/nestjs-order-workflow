@@ -32,7 +32,7 @@ Create local Compose credentials:
 cp .env.example .env
 ```
 
-Fill every blank value in `.env`. Docker Compose reads this file automatically.
+The example contains local-development defaults. Adjust them if needed.
 
 Start local infrastructure:
 
@@ -48,9 +48,6 @@ cp .env.example .env
 npm install
 npm run start:dev
 ```
-
-Fill every blank value in `backend/.env`; use the same Postgres and RabbitMQ
-values you put in the root `.env`.
 
 The backend listens on `http://localhost:3000`.
 
@@ -73,7 +70,8 @@ Create local Compose credentials if you have not already:
 cp .env.example .env
 ```
 
-Fill every blank value in `.env`. Docker Compose reads this file automatically.
+The example contains local-development defaults. Docker Compose reads the root
+`.env` automatically.
 
 Build and run infrastructure, backend, and frontend containers:
 
@@ -81,11 +79,26 @@ Build and run infrastructure, backend, and frontend containers:
 docker compose -f docker-compose.yml -f docker-compose.app.yml up -d --build
 ```
 
-Open the frontend at `http://localhost:8080`.
+Open the frontend through local Traefik:
 
-In this shape, the browser calls the frontend container. Frontend nginx serves
-the React build and proxies `/api/*` to the backend container over the Compose
-network.
+```text
+https://orderflow.app.localhost/
+```
+
+In this shape, the browser calls the frontend container through Traefik.
+Frontend nginx serves the React build and proxies `/api/*` to the backend
+container over the Compose network.
+
+### Environment files
+
+- Root `.env` is the local source of truth for shared Compose values such as
+  Postgres, RabbitMQ, admin, JWT, and `ORDERFLOW_HOST`.
+- `backend/.env` is only for direct local backend development with
+  `npm run start:dev`. It is not a production env file.
+
+When the backend runs directly, it loads `backend/.env` first and falls back to
+the root `.env` for shared credentials. This keeps passwords in one local file
+while still allowing direct development to use `localhost` connection targets.
 
 ## Try the API
 

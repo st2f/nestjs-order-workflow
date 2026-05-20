@@ -21,7 +21,8 @@ import { PaymentsModule } from './payments/payments.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
+      envFilePath:
+        process.env.NODE_ENV === 'test' ? '.env.test' : ['.env', '../.env'],
       load: [appConfig, authConfig, databaseConfig, rabbitmqConfig],
       validationSchema: Joi.object({
         PORT: Joi.number().port().default(3000),
@@ -31,15 +32,20 @@ import { PaymentsModule } from './payments/payments.module';
         JWT_EXPIRES_IN: Joi.string().default('1h'),
         DB_HOST: Joi.string().required(),
         DB_PORT: Joi.number().port().required(),
-        DB_USERNAME: Joi.string().required(),
-        DB_PASSWORD: Joi.string().required(),
-        DB_NAME: Joi.string().required(),
+        DB_USERNAME: Joi.string(),
+        DB_PASSWORD: Joi.string(),
+        DB_NAME: Joi.string(),
+        POSTGRES_USER: Joi.string(),
+        POSTGRES_PASSWORD: Joi.string(),
+        POSTGRES_DB: Joi.string(),
         TYPEORM_SYNCHRONIZE: Joi.boolean().required(),
         TYPEORM_LOGGING: Joi.boolean().required(),
         RABBITMQ_HOST: Joi.string().required(),
         RABBITMQ_PORT: Joi.number().port().required(),
-        RABBITMQ_USERNAME: Joi.string().required(),
-        RABBITMQ_PASSWORD: Joi.string().required(),
+        RABBITMQ_USERNAME: Joi.string(),
+        RABBITMQ_PASSWORD: Joi.string(),
+        RABBITMQ_DEFAULT_USER: Joi.string(),
+        RABBITMQ_DEFAULT_PASS: Joi.string(),
         RABBITMQ_MANAGEMENT_URL: Joi.string().uri().required(),
         RABBITMQ_EXCHANGE: Joi.string().default('orderflow.events'),
         OUTBOX_PUBLISHER_ENABLED: Joi.boolean().default(
@@ -68,7 +74,12 @@ import { PaymentsModule } from './payments/payments.module';
         RABBITMQ_PAYMENTS_REFUND_REQUESTED_QUEUE: Joi.string().default(
           'payments.refund-requested.v1',
         ),
-      }),
+      })
+        .or('DB_USERNAME', 'POSTGRES_USER')
+        .or('DB_PASSWORD', 'POSTGRES_PASSWORD')
+        .or('DB_NAME', 'POSTGRES_DB')
+        .or('RABBITMQ_USERNAME', 'RABBITMQ_DEFAULT_USER')
+        .or('RABBITMQ_PASSWORD', 'RABBITMQ_DEFAULT_PASS'),
       validationOptions: {
         abortEarly: false,
         allowUnknown: true,

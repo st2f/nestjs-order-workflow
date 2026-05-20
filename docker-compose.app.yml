@@ -41,5 +41,15 @@ services:
       context: ./frontend
     depends_on:
       - backend
-    ports:
-      - '8080:80'
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.orderflow.rule=Host(`${ORDERFLOW_HOST:?Set ORDERFLOW_HOST for local Compose}`)
+      - traefik.http.routers.orderflow.tls=true
+      - traefik.http.services.orderflow.loadbalancer.server.port=80
+    networks:
+      - default
+      - proxy
+
+networks:
+  proxy:
+    external: true

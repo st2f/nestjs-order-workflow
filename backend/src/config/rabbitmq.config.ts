@@ -2,8 +2,10 @@ export default () => ({
   rabbitmq: {
     host: process.env.RABBITMQ_HOST,
     port: Number(process.env.RABBITMQ_PORT),
-    username: process.env.RABBITMQ_USERNAME,
-    password: process.env.RABBITMQ_PASSWORD,
+    username:
+      process.env.RABBITMQ_USERNAME ?? process.env.RABBITMQ_DEFAULT_USER,
+    password:
+      process.env.RABBITMQ_PASSWORD ?? process.env.RABBITMQ_DEFAULT_PASS,
     managementUrl: process.env.RABBITMQ_MANAGEMENT_URL,
     exchange: process.env.RABBITMQ_EXCHANGE ?? 'orderflow.events',
     outboxPublisherEnabled:
